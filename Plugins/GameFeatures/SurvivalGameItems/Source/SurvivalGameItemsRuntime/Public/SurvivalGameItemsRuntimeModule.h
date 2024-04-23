@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FSurvivalGameInteractionRuntimeModule : public IModuleInterface
+class FSurvivalGameItemsRuntimeModule : public IModuleInterface
 {
 public:
 	//~IModuleInterface

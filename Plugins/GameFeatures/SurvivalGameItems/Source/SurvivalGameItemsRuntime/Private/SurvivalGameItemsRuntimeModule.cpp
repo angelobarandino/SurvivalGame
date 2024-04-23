@@ -1,16 +1,16 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "SurvivalGameInteractionRuntimeModule.h"
+#include "SurvivalGameItemsRuntimeModule.h"
 
-#define LOCTEXT_NAMESPACE "FSurvivalGameInteractionRuntimeModule"
+#define LOCTEXT_NAMESPACE "FSurvivalGameItemsRuntimeModule"
 
-void FSurvivalGameInteractionRuntimeModule::StartupModule()
+void FSurvivalGameItemsRuntimeModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory;
 	// the exact timing is specified in the .uplugin file per-module
 }
 
-void FSurvivalGameInteractionRuntimeModule::ShutdownModule()
+void FSurvivalGameItemsRuntimeModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.
 	// For modules that support dynamic reloading, we call this function before unloading the module.
@@ -18,4 +18,4 @@ void FSurvivalGameInteractionRuntimeModule::ShutdownModule()
 
 #undef LOCTEXT_NAMESPACE
 
-IMPLEMENT_MODULE(FSurvivalGameInteractionRuntimeModule, SurvivalGameInteractionRuntime)
+IMPLEMENT_MODULE(FSurvivalGameItemsRuntimeModule, SurvivalGameItemsRuntime)
