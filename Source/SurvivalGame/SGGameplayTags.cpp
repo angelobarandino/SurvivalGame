@@ -11,5 +11,8 @@ namespace SGGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InitState_DataAvailable, "InitState.DataAvailable", "");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InitState_DataInitialized, "InitState.DataInitialized", "");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(InitState_GameplayReady, "InitState.GameplayReady", "");
-	
+
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Interaction_Active, "Ability.Interaction.Active", "Requirement tag for activating interaction option");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Interaction_Primary, "Ability.Interaction.Primary", "");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Ability_Interaction_Secondary, "Ability.Interaction.Secondary", "");
 }

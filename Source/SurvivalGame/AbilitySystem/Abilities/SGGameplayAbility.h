@@ -23,5 +23,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Activation")
 	bool bActivateAbilityOnGranted = false;
 
-	virtual void OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
+	
+	virtual void OnAvatarActorSet();
+	
+	void ExternalEndAbility();
 };

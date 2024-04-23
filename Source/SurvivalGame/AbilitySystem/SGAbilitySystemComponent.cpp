@@ -9,6 +9,35 @@ USGAbilitySystemComponent::USGAbilitySystemComponent(const FObjectInitializer& O
 {
 }
 
+void USGAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActor* InAvatarActor)
+{
+	Super::InitAbilityActorInfo(InOwnerActor, InAvatarActor);
+
+	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (USGGameplayAbility* Ability = Cast<USGGameplayAbility>(AbilitySpec.Ability))
+		{
+			if (Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced)
+			{
+				TArray<UGameplayAbility*> AbilitySpecsInstances = AbilitySpec.GetAbilityInstances();
+				for (UGameplayAbility* AbilitySpecsInstance : AbilitySpecsInstances)
+				{
+					if (USGGameplayAbility* AbilityInstance = Cast<USGGameplayAbility>(AbilitySpecsInstance))
+					{
+						AbilityInstance->OnAvatarActorSet();
+					}
+				}
+			}
+			else
+			{
+				Ability->OnAvatarActorSet();
+			}
+		}
+	}
+
+	OnAvatarActorSet.Broadcast();
+}
+
 void USGAbilitySystemComponent::AbilityInputTagPressed(const FGameplayTag& InputTag)
 {
 	for (FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
@@ -53,6 +82,18 @@ void USGAbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec& S
 	if (Spec.IsActive())
 	{
 		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
+	}
+}
+
+void USGAbilitySystemComponent::CallOrAddOnAvatarActorSet(FOnAvatarActorSetDelegate::FDelegate&& Delegate)
+{
+	if (Cast<APawn>(GetAvatarActor()))
+	{
+		Delegate.Execute();
+	}
+	else
+	{
+		OnAvatarActorSet.Add(MoveTemp(Delegate));
 	}
 }
 

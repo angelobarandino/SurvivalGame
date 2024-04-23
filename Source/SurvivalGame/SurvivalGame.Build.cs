@@ -12,6 +12,7 @@ public class SurvivalGame : ModuleRules
 			"CoreUObject",
 			"Engine",	
 			"InputCore",
+			"UMG",
 			"GameplayAbilities",
 			"GameplayTags",
 			"GameplayTasks",

@@ -9,6 +9,8 @@
 
 #include "AbilitySystemComponent.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "SurvivalGame/AbilitySystem/SGAbilitySystemComponent.h"
+#include "SurvivalGame/AbilitySystem/Abilities/SGGameplayAbility.h"
 #include "SurvivalGame/Player/SGPlayerState.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(GameFeatureAction_AddAbilities)
@@ -160,11 +162,25 @@ void UGameFeatureAction_AddAbilities::RemoveActorAbilities(const AActor* Actor, 
 {
 	if (FActorExtensions* ActorExtensions = ActiveData.ActiveExtensions.Find(Actor))
 	{
-		if (UAbilitySystemComponent* ASC = Actor->FindComponentByClass<UAbilitySystemComponent>())
+		if (USGAbilitySystemComponent* ASC = Actor->FindComponentByClass<USGAbilitySystemComponent>())
 		{
 			for (const FGameplayAbilitySpecHandle AbilityHandle : ActorExtensions->Abilities)
 			{
 				ASC->SetRemoveAbilityOnEnd(AbilityHandle);
+				
+				if (const FGameplayAbilitySpec* AbilitySpec = ASC->FindAbilitySpecFromHandle(AbilityHandle))
+				{
+					if (AbilitySpec->IsActive())
+					{
+						ASC->CallServerEndAbility(AbilityHandle, AbilitySpec->ActivationInfo, ASC->ScopedPredictionKey);
+					}
+					
+					// USGGameplayAbility* GSAbility = Cast<USGGameplayAbility>(AbilitySpec->Ability);
+					// if (AbilitySpec->IsActive() && GSAbility != nullptr)
+					// {
+					// 	GSAbility->ExternalEndAbility();
+					// }
+				}
 			}
 		}
 

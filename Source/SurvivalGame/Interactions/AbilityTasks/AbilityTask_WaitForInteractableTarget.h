@@ -4,8 +4,10 @@
 #include "Abilities/Tasks/AbilityTask.h"
 #include "AbilityTask_WaitForInteractableTarget.generated.h"
 
+struct FInteractOption;
 class IInteractableTarget;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FFoundInteractableTargetDelegate);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInteractionOptionsDelegate, const TArray<FInteractOption>&, InteractOptions);
 
 UCLASS()
 class UAbilityTask_WaitForInteractableTarget : public UAbilityTask
@@ -20,10 +22,10 @@ public:
 
 protected:
 	UPROPERTY(BlueprintAssignable)
-	FFoundInteractableTargetDelegate FoundInteractable;
+	FInteractionOptionsDelegate FoundInteractable;
 
 	UPROPERTY(BlueprintAssignable)
-	FFoundInteractableTargetDelegate LostInteractable;
+	FInteractionOptionsDelegate LostInteractable;
 
 	virtual void OnDestroy(bool bInOwnerFinished) override;
 	
@@ -33,12 +35,12 @@ private:
 	float InteractionScanRate = 0.1f;
 	bool bShowDebug = false;
 
-	FTimerHandle TimerHandle;
-
 	TScriptInterface<IInteractableTarget> ActiveInteractableTarget;
-
-	void PerformTrace();
-	void FoundInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableObject);
-	void LostInteractableTarget();
+	TMap<FObjectKey, FGameplayAbilitySpecHandle> InteractOptionsAbilityHandles;
 	
+	
+	void OnPawnAvatarInitialized();
+	void OnFoundInteractableTarget(TScriptInterface<IInteractableTarget> InteractableTarget);
+	void OnLostInteractableTarget(TScriptInterface<IInteractableTarget> InteractableTarget);
+	void GrantInteractionOptionsAbility(const TArray<FInteractOption>& InteractOptions);
 };

@@ -5,6 +5,20 @@
 
 #include "InteractableTarget.h"
 
+void UInteractionStatics::SetActorHighlightEnable(const AActor* Actor, const bool bEnable)
+{
+	if (Actor == nullptr)
+	{
+		return;
+	}
+
+	TArray<UStaticMeshComponent*> StaticMeshComponents;
+	Actor->GetComponents(UStaticMeshComponent::StaticClass(), StaticMeshComponents);
+	for (UStaticMeshComponent* StaticMeshComp : StaticMeshComponents)
+	{
+		StaticMeshComp->SetRenderCustomDepth(bEnable);
+	}
+}
 
 bool UInteractionStatics::FindNearestIntractableTargetFromOverlapResults(const TArray<FOverlapResult>& OverlapResults, TScriptInterface<IInteractableTarget>& OutInteractableTarget)
 {
@@ -34,4 +48,22 @@ bool UInteractionStatics::FindNearestIntractableTargetFromOverlapResults(const T
 	}
 
 	return false;
+}
+
+AActor* UInteractionStatics::GetActorFromInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableTarget)
+{
+	if (UObject* InteractableObjectRef = InteractableTarget.GetObject())
+	{
+		if (AActor* Actor = Cast<AActor>(InteractableObjectRef))
+		{
+			return Actor;
+		}
+
+		if (const UActorComponent* ActorComponent = Cast<UActorComponent>(InteractableObjectRef))
+		{
+			return ActorComponent->GetOwner();
+		}
+	}
+
+	return nullptr;
 }

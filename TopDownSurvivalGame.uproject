@@ -32,15 +32,15 @@
 			"Enabled": true
 		},
 		{
+			"Name": "SurvivalGameItems",
+			"Enabled": true
+		},
+		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
 		},
 		{
 			"Name": "AbilitySystemGameFeatureActions",
-			"Enabled": true
-		},
-		{
-			"Name": "SurvivalGameInteraction",
 			"Enabled": true
 		},
 		{

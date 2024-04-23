@@ -9,12 +9,27 @@ USGGameplayAbility::USGGameplayAbility(const FObjectInitializer& ObjectInitializ
 {
 }
 
-void USGGameplayAbility::OnAvatarSet(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+void USGGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
-	Super::OnAvatarSet(ActorInfo, Spec);
+	Super::OnGiveAbility(ActorInfo, Spec);
 
-	if (bActivateAbilityOnGranted)
+	if (bActivateAbilityOnGranted && ActorInfo && !Spec.IsActive())
 	{
-		ActorInfo->AbilitySystemComponent->TryActivateAbility(Spec.Handle, false);
+		if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
+		{
+			ASC->TryActivateAbility(Spec.Handle);
+		}
 	}
+}
+
+void USGGameplayAbility::OnAvatarActorSet()
+{
+	
+}
+
+void USGGameplayAbility::ExternalEndAbility()
+{
+	check(CurrentActorInfo);
+
+	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }

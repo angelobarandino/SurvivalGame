@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "InteractOption.h"
 #include "UObject/Interface.h"
 #include "InteractableTarget.generated.h"
 
@@ -16,13 +17,14 @@ class UInteractableTarget : public UInterface
 /**
  * 
  */
-class SURVIVALGAMEINTERACTIONRUNTIME_API IInteractableTarget
+class SURVIVALGAME_API IInteractableTarget
 {
 	GENERATED_BODY()
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
 	
-	virtual void UnHighlightActor();
-	virtual void HighlightActor();
+	virtual void UnHighlightActor() = 0;
+	virtual void HighlightActor() = 0;
+	virtual void GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions) = 0;
 };
