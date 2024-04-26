@@ -26,6 +26,19 @@ void AInteractableActor::GatherInteractionOptions(TArray<FInteractOption>& Inter
 	for (const FInteractOption& InteractOption : InteractOptions)
 	{
 		FInteractOption& OptionEntry = InteractionOptions.Add_GetRef(InteractOption);
-		OptionEntry.InteractableTarget = this;
+	}
+}
+
+void AInteractableActor::GetInteractionDefinition(FInteractionDefinition& InteractionDefinition)
+{
+	InteractionDefinition.Name = InteractableObjectName;
+	InteractionDefinition.InteractableTarget = this;
+	InteractionDefinition.InteractWidgetClass = InteractWidgetClass;
+
+	for (const FInteractOption& InteractOption : InteractOptions)
+	{
+		FInteractOption& Option = InteractionDefinition.InteractOptions.Add_GetRef(InteractOption);
+		UInteractionStatics::SetInteractOptionData(Option);
+		Option.InteractableTarget = this;
 	}
 }

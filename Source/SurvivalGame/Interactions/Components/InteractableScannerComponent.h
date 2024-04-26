@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/ActorComponent.h"
+#include "Components/PawnComponent.h"
 #include "InteractableScannerComponent.generated.h"
 
 
@@ -12,7 +12,7 @@ class IInteractableTarget;
 DECLARE_MULTICAST_DELEGATE_OneParam(FInteractableTargetDelegate, const TScriptInterface<IInteractableTarget>);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class SURVIVALGAME_API UInteractableScannerComponent : public UActorComponent
+class SURVIVALGAME_API UInteractableScannerComponent : public UPawnComponent
 {
 	GENERATED_BODY()
 
@@ -31,10 +31,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Interaction")
 	bool bShowDebug = false;
 
+	TScriptInterface<IInteractableTarget> GetActiveInteractableTarget() const;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	
+
 private:
 
 	FTimerHandle TimerHandle;

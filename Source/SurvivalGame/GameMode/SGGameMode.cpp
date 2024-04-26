@@ -10,6 +10,7 @@
 #include "SurvivalGame/Character/SGCharacterConfig.h"
 #include "SurvivalGame/Character/SGPawnManagerComponent.h"
 #include "SurvivalGame/Player/SGPlayerController.h"
+#include "SurvivalGame/UI/SGHUD.h"
 
 ASGGameMode::ASGGameMode(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -17,6 +18,7 @@ ASGGameMode::ASGGameMode(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	PlayerControllerClass = ASGPlayerController::StaticClass();
 	PlayerStateClass = ASGPlayerController::StaticClass();
 	DefaultPawnClass = ASGCharacter::StaticClass();
+	HUDClass = ASGHUD::StaticClass();
 }
 
 void ASGGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)

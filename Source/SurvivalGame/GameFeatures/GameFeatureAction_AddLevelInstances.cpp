@@ -2,8 +2,9 @@
 
 #include "GameFeatureAction_AddLevelInstances.h"
 
-#include "Containers/UnrealString.h"
 #include "CoreTypes.h"
+#include "Components/GameFrameworkComponentManager.h"
+#include "Containers/UnrealString.h"
 #include "Delegates/Delegate.h"
 #include "Engine/Engine.h"
 #include "Engine/GameInstance.h"
@@ -16,6 +17,7 @@
 #include "Logging/LogCategory.h"
 #include "Logging/LogMacros.h"
 #include "Misc/AssertionMacros.h"
+#include "SurvivalGame/SurvivalGame.h"
 #include "Trace/Detail/Channel.h"
 #include "UObject/ObjectPtr.h"
 #include "UObject/UObjectBaseUtility.h"
@@ -24,9 +26,9 @@
 #include "Misc/DataValidation.h"
 #endif
 
+class UGameFrameworkComponentManager;
 struct FGameFeatureDeactivatingContext;
 
-DEFINE_LOG_CATEGORY_STATIC(LogAncientGameFeatures, Log, All);
 #define LOCTEXT_NAMESPACE "AncientGameFeatures"
 
 //////////////////////////////////////////////////////////////////////
@@ -34,24 +36,25 @@ DEFINE_LOG_CATEGORY_STATIC(LogAncientGameFeatures, Log, All);
 
 void UGameFeatureAction_AddLevelInstances::OnGameFeatureActivating(FGameFeatureActivatingContext& Context)
 {
-	FWorldDelegates::OnWorldCleanup.AddUObject(this, &UGameFeatureAction_AddLevelInstances::OnWorldCleanup);
-
-	if (!ensureAlways(AddedLevels.Num() == 0))
+	FPerContextData& ActiveData = ContextData.FindOrAdd(Context);
+	if (!ensure(ActiveData.ActorData.IsEmpty()) ||
+		!ensure(ActiveData.ComponentRequests.IsEmpty()))
 	{
-		DestroyAddedLevels();
+		Reset(ActiveData);
 	}
 
-	bIsActivated = true;
 	Super::OnGameFeatureActivating(Context);
 }
 
 void UGameFeatureAction_AddLevelInstances::OnGameFeatureDeactivating(FGameFeatureDeactivatingContext& Context)
 {
-	DestroyAddedLevels();
-	bIsActivated = false;
-
-	FWorldDelegates::OnWorldCleanup.RemoveAll(this);
 	Super::OnGameFeatureDeactivating(Context);
+
+	FPerContextData* ActiveData = ContextData.Find(Context);
+	if (ensure(ActiveData))
+	{
+		Reset(*ActiveData);
+	}
 }
 
 #if WITH_EDITOR
@@ -79,11 +82,61 @@ void UGameFeatureAction_AddLevelInstances::AddToWorld(const FWorldContext& World
 {
 	UWorld* World = WorldContext.World();
 	const UGameInstance* GameInstance = WorldContext.OwningGameInstance;
+	FPerContextData& ActiveData = ContextData.FindOrAdd(ChangeContext);
 
-	if (ensureAlways(bIsActivated) && (GameInstance != nullptr) && (World != nullptr) && World->IsGameWorld())
+	if ((GameInstance != nullptr) && World && World->IsGameWorld())
 	{
-		AddedLevels.Reserve(AddedLevels.Num() + LevelInstanceList.Num());
+		if (UGameFrameworkComponentManager* ComponentManager = UGameInstance::GetSubsystem<UGameFrameworkComponentManager>(GameInstance))
+		{
+			const UGameFrameworkComponentManager::FExtensionHandlerDelegate ExtensionDelegate =
+				UGameFrameworkComponentManager::FExtensionHandlerDelegate::CreateUObject(this, &ThisClass::HandleActorExtension, ChangeContext);
 
+			const TSharedPtr<FComponentRequestHandle> ExtensionRequestHandle =
+				ComponentManager->AddExtensionHandler(APlayerController::StaticClass(), ExtensionDelegate);
+
+			ActiveData.ComponentRequests.Add(ExtensionRequestHandle);
+		}
+	}
+}
+
+void UGameFeatureAction_AddLevelInstances::Reset(FPerContextData& ActiveData)
+{
+	ActiveData.ComponentRequests.Empty();
+	
+	for (TTuple<FObjectKey, FPerActorData>& ActorData : ActiveData.ActorData)
+	{
+		for (ULevelStreamingDynamic* Level : ActorData.Value.AddedLevels)
+		{
+			CleanUpAddedLevel(Level);
+		}
+	}
+	
+	ActiveData.ActorData.Empty();
+}
+
+void UGameFeatureAction_AddLevelInstances::HandleActorExtension(AActor* Actor, FName EventName, FGameFeatureStateChangeContext ChangeContext)
+{
+	FPerContextData& ActiveData = ContextData.FindOrAdd(ChangeContext);
+	if (EventName == UGameFrameworkComponentManager::NAME_ExtensionRemoved || EventName == UGameFrameworkComponentManager::NAME_ReceiverRemoved)
+	{
+		RemoveLevelInstance(Actor, ActiveData);
+	}
+	else if (EventName == UGameFrameworkComponentManager::NAME_ExtensionAdded || EventName == UGameFrameworkComponentManager::NAME_GameActorReady)
+	{
+		AddLevelInstance(Actor, ActiveData);
+	}
+}
+
+void UGameFeatureAction_AddLevelInstances::AddLevelInstance(const AActor* Actor, FPerContextData& ActiveData)
+{
+	UWorld* World = Actor->GetWorld();
+	const UGameInstance* GameInstance = Actor->GetGameInstance();
+	
+	if ((GameInstance != nullptr) && (World != nullptr) && World->IsGameWorld())
+	{
+		FPerActorData& ActorData = ActiveData.ActorData.FindOrAdd(Actor);
+		ActorData.AddedLevels.Reserve(LevelInstanceList.Num());
+		
 		for (const FGameFeatureLevelInstanceEntry& Entry : LevelInstanceList)
 		{
 			if (!Entry.Level.IsNull())
@@ -91,74 +144,41 @@ void UGameFeatureAction_AddLevelInstances::AddToWorld(const FWorldContext& World
 				if (!Entry.TargetWorld.IsNull())
 				{
 					const UWorld* TargetWorld = Entry.TargetWorld.Get();
-					if (TargetWorld != World)
+
+					if (World->OriginalWorldName == TargetWorld->OriginalWorldName)
 					{
-						// This level is intended for a specific world (not this one)
-						continue;
+						bool bSuccess = false;
+						ULevelStreamingDynamic* StreamingLevelRef = ULevelStreamingDynamic::LoadLevelInstanceBySoftObjectPtr(World, Entry.Level, Entry.Location, Entry.Rotation, bSuccess);
+
+						if (!bSuccess)
+						{
+							UE_LOG(LogSurvivalGame, Error, TEXT("[GameFeatureData %s]: Failed to load level instance `%s`."), *GetPathNameSafe(this), *Entry.Level.ToString());
+						}
+
+						if (bSuccess)
+						{
+							ActorData.AddedLevels.Add(StreamingLevelRef);
+						}
 					}
 				}
-
-				LoadDynamicLevelForEntry(Entry, World);
 			}
 		}
 	}
-
+	
 	GEngine->BlockTillLevelStreamingCompleted(World);
 }
 
-void UGameFeatureAction_AddLevelInstances::OnWorldCleanup(UWorld* World, bool /*bSessionEnded*/, bool /*bCleanupResources*/)
+void UGameFeatureAction_AddLevelInstances::RemoveLevelInstance(const AActor* Actor, FPerContextData& ActiveData) const
 {
-	const int32 FoundIndex = AddedLevels.IndexOfByPredicate([World](ULevelStreamingDynamic* InStreamingLevel)
+	if (FPerActorData* ActorData = ActiveData.ActorData.Find(Actor))
+	{
+		for (ULevelStreamingDynamic* Level : ActorData->AddedLevels)
 		{
-			return InStreamingLevel && InStreamingLevel->GetWorld() == World;
-		});
-
-	if (FoundIndex != INDEX_NONE)
-	{
-		CleanUpAddedLevel(AddedLevels[FoundIndex]);
-		AddedLevels.RemoveAtSwap(FoundIndex);
-	}
-}
-
-ULevelStreamingDynamic* UGameFeatureAction_AddLevelInstances::LoadDynamicLevelForEntry(const FGameFeatureLevelInstanceEntry& Entry, UWorld* TargetWorld)
-{
-	bool bSuccess = false;
-	ULevelStreamingDynamic* StreamingLevelRef = ULevelStreamingDynamic::LoadLevelInstanceBySoftObjectPtr(TargetWorld, Entry.Level, Entry.Location, Entry.Rotation, bSuccess);
-
-	if (!bSuccess)
-	{
-		UE_LOG(LogAncientGameFeatures, Error, TEXT("[GameFeatureData %s]: Failed to load level instance `%s`."), *GetPathNameSafe(this), *Entry.Level.ToString());
-	}
-	else if (StreamingLevelRef)
-	{
-		AddedLevels.Add(StreamingLevelRef);
-	}
-
-	return StreamingLevelRef;
-}
-
-void UGameFeatureAction_AddLevelInstances::OnLevelLoaded()
-{
-	if (ensureAlways(bIsActivated))
-	{
-		// We don't have a way of knowing which instance this was triggered for, so we have to look through them all...
-		for (ULevelStreamingDynamic* Level : AddedLevels)
-		{
-			if (Level && Level->GetLevelStreamingState() == ELevelStreamingState::LoadedNotVisible)
-			{
-				Level->SetShouldBeVisible(true);
-			}
+			CleanUpAddedLevel(Level);
 		}
+		
+		ActiveData.ActorData.Remove(Actor);
 	}
-}
-
-void UGameFeatureAction_AddLevelInstances::DestroyAddedLevels()
-{
-	for (ULevelStreamingDynamic* Level : AddedLevels)
-	{
-		CleanUpAddedLevel(Level);
-	}
-	AddedLevels.Empty();
 }
 
 void UGameFeatureAction_AddLevelInstances::CleanUpAddedLevel(ULevelStreamingDynamic* Level) const

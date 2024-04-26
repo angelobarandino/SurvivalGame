@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
+#include "Abilities/SGGameplayAbility_InteractAction.h"
 #include "InteractOption.generated.h"
 
 class UGameplayEffect;
@@ -15,21 +15,36 @@ struct FInteractOption
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FText InteractText;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float InteractDuration = 0.f;
 	
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<USGGameplayAbility_InteractAction> InteractionAbilityToGrant;
+
+	UPROPERTY(BlueprintReadOnly)
+	FGameplayTag InteractInputTag;
+
+	UPROPERTY(BlueprintReadOnly)
+	float InteractDuration = 0.f;
+
+	UPROPERTY(BlueprintReadOnly)
+	TScriptInterface<IInteractableTarget> InteractableTarget;
+};
+
+USTRUCT(BlueprintType)
+struct FInteractionDefinition
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	FName Name;
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<FInteractOption> InteractOptions;
+
+	UPROPERTY(BlueprintReadOnly)
 	TScriptInterface<IInteractableTarget> InteractableTarget;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	FGameplayTag ActivationRequiredTag;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSubclassOf<UGameplayAbility> InteractionAbilityToGrant;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSoftClassPtr<UUserWidget> InteractionWidgetClass;
+	UPROPERTY(BlueprintReadOnly)
+	TSoftClassPtr<UUserWidget> InteractWidgetClass;
 };

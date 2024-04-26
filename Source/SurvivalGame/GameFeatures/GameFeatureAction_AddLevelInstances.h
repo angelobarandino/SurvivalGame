@@ -12,6 +12,7 @@
 
 #include "GameFeatureAction_AddLevelInstances.generated.h"
 
+struct FComponentRequestHandle;
 class FText;
 class ULevelStreamingDynamic;
 class UObject;
@@ -71,24 +72,28 @@ public:
 	TArray<FGameFeatureLevelInstanceEntry> LevelInstanceList;
 
 private:
+	struct FPerActorData
+	{
+		TArray<ULevelStreamingDynamic*> AddedLevels;
+	};
+	
+	struct FPerContextData
+	{
+		TArray<TSharedPtr<FComponentRequestHandle>> ComponentRequests;
+		TMap<FObjectKey, FPerActorData> ActorData;
+	};
+	
+	TMap<FGameFeatureStateChangeContext, FPerContextData> ContextData;
+	
 	//~ Begin UGameFeatureAction_WorldActionBase interface
 	virtual void AddToWorld(const FWorldContext& WorldContext, const FGameFeatureStateChangeContext& ChangeContext) override;
 	//~ End UGameFeatureAction_WorldActionBase interface
 
-	void OnWorldCleanup(UWorld* World, bool bSessionEnded, bool bCleanupResources);
-	
-	ULevelStreamingDynamic* LoadDynamicLevelForEntry(const FGameFeatureLevelInstanceEntry& Entry, UWorld* TargetWorld);	
+	void Reset(FPerContextData& ActiveData);
+	void HandleActorExtension(AActor* Actor, FName EventName, FGameFeatureStateChangeContext ChangeContext);
 
-	UFUNCTION() // UFunction so we can bind to a dynamic delegate
-	void OnLevelLoaded();
+	void AddLevelInstance(const AActor* Actor, FPerContextData& ActiveData);
+	void RemoveLevelInstance(const AActor* Actor, FPerContextData& ActiveData) const;
 
-	void DestroyAddedLevels();
 	void CleanUpAddedLevel(ULevelStreamingDynamic* Level) const;
-
-private:
-	UPROPERTY(transient)
-	TArray<ULevelStreamingDynamic*> AddedLevels;
-
-	bool bIsActivated = false;
-	bool bLayerStateReentrantGuard = false;
 };

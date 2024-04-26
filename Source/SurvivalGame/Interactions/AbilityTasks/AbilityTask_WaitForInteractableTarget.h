@@ -4,10 +4,11 @@
 #include "Abilities/Tasks/AbilityTask.h"
 #include "AbilityTask_WaitForInteractableTarget.generated.h"
 
+struct FInteractionDefinition;
 struct FInteractOption;
 class IInteractableTarget;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInteractionOptionsDelegate, const TArray<FInteractOption>&, InteractOptions);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInteractionOptionsDelegate, const FInteractionDefinition&, InteractionDefinition);
 
 UCLASS()
 class UAbilityTask_WaitForInteractableTarget : public UAbilityTask

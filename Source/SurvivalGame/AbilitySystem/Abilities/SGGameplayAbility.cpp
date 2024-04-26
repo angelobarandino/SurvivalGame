@@ -9,6 +9,16 @@ USGGameplayAbility::USGGameplayAbility(const FObjectInitializer& ObjectInitializ
 {
 }
 
+APlayerController* USGGameplayAbility::GetPlayerControllerFromActorInfo() const
+{
+	if (CurrentActorInfo)
+	{
+		return CurrentActorInfo->PlayerController.Get();
+	}
+
+	return nullptr;
+}
+
 void USGGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);

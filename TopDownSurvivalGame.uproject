@@ -11,7 +11,9 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"ModularGameplayActors",
-				"EnhancedInput"
+				"EnhancedInput",
+				"CommonUI",
+				"ModularGameplay"
 			]
 		}
 	],
@@ -45,6 +47,14 @@
 		},
 		{
 			"Name": "CommonUI",
+			"Enabled": true
+		},
+		{
+			"Name": "UIExtension",
+			"Enabled": true
+		},
+		{
+			"Name": "AsyncMixin",
 			"Enabled": true
 		}
 	]

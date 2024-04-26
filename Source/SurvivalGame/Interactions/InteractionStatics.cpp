@@ -4,6 +4,8 @@
 #include "InteractionStatics.h"
 
 #include "InteractableTarget.h"
+#include "Components/InteractableScannerComponent.h"
+#include "SurvivalGame/AbilitySystem/Abilities/SGGameplayAbility.h"
 
 void UInteractionStatics::SetActorHighlightEnable(const AActor* Actor, const bool bEnable)
 {
@@ -66,4 +68,50 @@ AActor* UInteractionStatics::GetActorFromInteractableTarget(const TScriptInterfa
 	}
 
 	return nullptr;
+}
+
+FVector UInteractionStatics::GetInteractableActorWorldLocation(const TScriptInterface<IInteractableTarget>& InteractableTarget)
+{
+	if (UObject* InteractableObjectRef = InteractableTarget.GetObject())
+	{
+		if (const AActor* Actor = Cast<AActor>(InteractableObjectRef))
+		{
+			return Actor->GetActorLocation();
+		}
+
+		if (const UActorComponent* ActorComponent = Cast<UActorComponent>(InteractableObjectRef))
+		{
+			if (const AActor* Actor = ActorComponent->GetOwner())
+			{
+				return Actor->GetActorLocation();
+			}
+		}
+	}
+
+	return FVector::Zero();
+}
+
+void UInteractionStatics::SetInteractOptionData(FInteractOption& InteractOption)
+{
+	if (InteractOption.InteractionAbilityToGrant)
+	{
+		if (const USGGameplayAbility_InteractAction* Ability = GetDefault<USGGameplayAbility_InteractAction>(InteractOption.InteractionAbilityToGrant))
+		{
+			InteractOption.InteractInputTag = Ability->InputTag;
+			InteractOption.InteractDuration = Ability->InteractDuration;
+		}
+	}
+}
+
+TScriptInterface<IInteractableTarget> UInteractionStatics::GetActiveInteractableTarget(const APawn* Pawn)
+{
+	if (Pawn)
+	{
+		if (const UInteractableScannerComponent* InteractableScanner = Pawn->FindComponentByClass<UInteractableScannerComponent>())
+		{
+			return InteractableScanner->GetActiveInteractableTarget();
+		}
+	}
+
+	return TScriptInterface<IInteractableTarget>();
 }

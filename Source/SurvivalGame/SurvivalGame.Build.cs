@@ -12,18 +12,25 @@ public class SurvivalGame : ModuleRules
 			"CoreUObject",
 			"Engine",	
 			"InputCore",
-			"UMG",
 			"GameplayAbilities",
 			"GameplayTags",
 			"GameplayTasks",
 			"ModularGameplay",
 			"ModularGameplayActors",
-			"GameFeatures"
+			"GameFeatures",
+			"AsyncMixin"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
-			"EnhancedInput"
+			"Slate",
+			"SlateCore",
+			"EnhancedInput",
+			"UMG",
+			"CommonUI",
+			"CommonGame",
+			"CommonUser",
+			"UIExtension"
 		});
 	}
 }

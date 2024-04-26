@@ -7,12 +7,18 @@
 #include "SurvivalGame/Interactions/InteractionStatics.h"
 #include "SurvivalGame/Physics/SGCollisionChannels.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InteractableScannerComponent)
 
 UInteractableScannerComponent::UInteractableScannerComponent(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
 	SetIsReplicatedByDefault(true);
+}
+
+TScriptInterface<IInteractableTarget> UInteractableScannerComponent::GetActiveInteractableTarget() const
+{
+	return ActiveInteractableTarget;
 }
 
 void UInteractableScannerComponent::BeginPlay()
@@ -59,6 +65,13 @@ void UInteractableScannerComponent::PerformTrace()
 	{
 		LostInteractableTarget();
 	}
+
+#if ENABLE_DRAW_DEBUG
+	if (bShowDebug)
+	{
+		DrawDebugSphere(GetWorld(), Position, InteractionScanRadius, 12, FColor::Yellow, false, InteractionScanRate, 0, 1);
+	}
+#endif
 }
 
 void UInteractableScannerComponent::FoundInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableObject)

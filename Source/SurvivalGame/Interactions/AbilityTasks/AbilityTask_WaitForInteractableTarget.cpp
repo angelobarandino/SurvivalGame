@@ -3,6 +3,7 @@
 #include "AbilitySystemComponent.h"
 #include "SurvivalGame/AbilitySystem/SGAbilitySystemComponent.h"
 #include "SurvivalGame/Interactions/InteractableTarget.h"
+#include "SurvivalGame/Interactions/Abilities/SGGameplayAbility_InteractAction.h"
 #include "SurvivalGame/Interactions/Components/InteractableScannerComponent.h"
 
 UAbilityTask_WaitForInteractableTarget* UAbilityTask_WaitForInteractableTarget::WaitForInteractableTarget(UGameplayAbility* OwningAbility, float InteractionScanRange, float InteractionScanRate, bool bShowDebug)
@@ -47,11 +48,11 @@ void UAbilityTask_WaitForInteractableTarget::OnPawnAvatarInitialized()
 
 void UAbilityTask_WaitForInteractableTarget::OnFoundInteractableTarget(const TScriptInterface<IInteractableTarget> InteractableTarget)
 {
-	TArray<FInteractOption> InteractOptions;
-	InteractableTarget->GatherInteractionOptions(InteractOptions);
+	FInteractionDefinition InteractionDefinition;
+	InteractableTarget->GetInteractionDefinition(InteractionDefinition);
 	
-	GrantInteractionOptionsAbility(InteractOptions);
-	FoundInteractable.Broadcast(InteractOptions);
+	GrantInteractionOptionsAbility(InteractionDefinition.InteractOptions);
+	FoundInteractable.Broadcast(InteractionDefinition);
 }
 
 void UAbilityTask_WaitForInteractableTarget::OnLostInteractableTarget(const TScriptInterface<IInteractableTarget> InteractableTarget)
@@ -72,8 +73,9 @@ void UAbilityTask_WaitForInteractableTarget::GrantInteractionOptionsAbility(cons
 				{
 					continue;
 				}
-				
-				FGameplayAbilitySpec AbilitySpec(InteractOption.InteractionAbilityToGrant, 1, INDEX_NONE, this);
+
+				const TSubclassOf<UGameplayAbility> AbilityClass(InteractOption.InteractionAbilityToGrant);
+				FGameplayAbilitySpec AbilitySpec(AbilityClass, 1, INDEX_NONE, this);
 				FGameplayAbilitySpecHandle AbilitySpecHandle = AbilitySystemComponent->GiveAbility(AbilitySpec);
 				InteractOptionsAbilityHandles.Add(ObjectKey, AbilitySpecHandle);
 			}

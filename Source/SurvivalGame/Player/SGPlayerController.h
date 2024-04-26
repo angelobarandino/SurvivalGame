@@ -3,22 +3,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ModularPlayerController.h"
+#include "CommonPlayerController.h"
 #include "SGPlayerController.generated.h"
 
-struct FGameplayTag;
-struct FInputActionValue;
-class USGInputConfig;
 /**
  * 
  */
-UCLASS()
-class SURVIVALGAME_API ASGPlayerController : public AModularPlayerController
+UCLASS(Config = Game)
+class SURVIVALGAME_API ASGPlayerController : public ACommonPlayerController
 {
 	GENERATED_BODY()
 
 public:
-	ASGPlayerController(const FObjectInitializer& ObjectInitializer);
+	ASGPlayerController(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
 };
 

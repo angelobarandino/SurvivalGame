@@ -22,10 +22,6 @@ public class SurvivalGameCoreRuntime : ModuleRules
 		{
 			"Core",
 			"SurvivalGame",
-			"GameplayAbilities",
-			"GameplayTags",
-			"GameplayTasks",
-			"ModularGameplay",
 			"ModularGameplayActors",
 		});
 		
@@ -35,7 +31,13 @@ public class SurvivalGameCoreRuntime : ModuleRules
 			"Engine",
 			"Slate",
 			"SlateCore", 
+			"GameplayAbilities",
+			"GameplayTags",
+			"GameplayTasks",
+			"ModularGameplay",
 			"EnhancedInput",
+			"CommonUI",
+			"CommonGame"
 		});
 		
 		DynamicallyLoadedModuleNames.AddRange(new string[]

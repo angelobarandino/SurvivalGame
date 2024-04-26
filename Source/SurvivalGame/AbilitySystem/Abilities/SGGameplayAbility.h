@@ -23,6 +23,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Activation")
 	bool bActivateAbilityOnGranted = false;
 
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	APlayerController* GetPlayerControllerFromActorInfo() const;
+	
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 	
 	virtual void OnAvatarActorSet();

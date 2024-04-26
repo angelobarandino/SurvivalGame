@@ -19,8 +19,16 @@ public:
 	virtual void HighlightActor() override;
 	virtual void UnHighlightActor() override;
 	virtual void GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions) override;
+	virtual void GetInteractionDefinition(FInteractionDefinition& InteractionDefinition) override;
 	// ~ End IInteractableTarget
 
+	
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	FName InteractableObjectName;
+
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	TSoftClassPtr<UUserWidget> InteractWidgetClass;
+	
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	TArray<FInteractOption> InteractOptions;
 };
