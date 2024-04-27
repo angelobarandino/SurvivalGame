@@ -141,10 +141,8 @@ void UGameFeatureAction_AddLevelInstances::AddLevelInstance(const AActor* Actor,
 		{
 			if (!Entry.Level.IsNull())
 			{
-				if (!Entry.TargetWorld.IsNull())
+				if (const UWorld* TargetWorld = Entry.TargetWorld.Get())
 				{
-					const UWorld* TargetWorld = Entry.TargetWorld.Get();
-
 					if (World->OriginalWorldName == TargetWorld->OriginalWorldName)
 					{
 						bool bSuccess = false;

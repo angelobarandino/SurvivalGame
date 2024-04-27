@@ -120,12 +120,17 @@ void USGHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Man
 	{
 		const APawn* OwningPawn = GetPawn<APawn>();
 		const ASGPlayerState* PlayerState = GetPlayerState<ASGPlayerState>();
-		const APlayerController* PC = GetController<APlayerController>();
-		if (!ensure(OwningPawn && PlayerState && PC))
+		if (!ensure(OwningPawn && PlayerState))
 		{
 			return;
 		}
-
+		
+		const APlayerController* PC = GetController<APlayerController>();
+		if (PC == nullptr)
+		{
+			return;
+		}
+		
 		if (USGPawnManagerComponent* PawnManager = OwningPawn->FindComponentByClass<USGPawnManagerComponent>())
 		{
 			PawnManager->SetAbilitySystemComponent(PlayerState->GetAbilitySystemComponent());

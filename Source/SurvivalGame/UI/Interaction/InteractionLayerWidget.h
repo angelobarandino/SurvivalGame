@@ -22,6 +22,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void OnInitialize();
 
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+	
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 
@@ -30,7 +32,7 @@ private:
 	FTimerHandle ProjectTimerHandle;
 	FVector ScreenPositionWithDepth;
 
-	TObjectPtr<UCanvasPanelSlot> CurrentInteractionSlot;
+	TWeakObjectPtr<UCanvasPanelSlot> CurrentInteractionSlot;
 	TObjectPtr<UInteractionDescriptor> CurrentInteractionDescriptor;
 	
 	void ShowInteraction(UInteractionDescriptor* InteractionDescriptor);

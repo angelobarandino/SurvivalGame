@@ -32,6 +32,11 @@ void UInteractionLayer::OnInitialize()
 	}
 }
 
+void UInteractionLayer::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+}
+
 TSharedRef<SWidget> UInteractionLayer::RebuildWidget()
 {
 	if (!IsDesignTime())
@@ -85,7 +90,7 @@ void UInteractionLayer::ShowInteraction(UInteractionDescriptor* InteractionDescr
 void UInteractionLayer::HideInteraction(UInteractionDescriptor* InteractionDescriptor)
 {
 	GetWorld()->GetTimerManager().ClearTimer(ProjectTimerHandle);
-	
+
 	if (InteractionDescriptor)
 	{
 		if (UUserWidget* InteractionWidget = InteractionDescriptor->InteractionWidget.Get())
@@ -95,18 +100,14 @@ void UInteractionLayer::HideInteraction(UInteractionDescriptor* InteractionDescr
 				IInteractionWidgetInterface::Execute_UnbindInteraction(InteractionWidget, InteractionDescriptor);
 			}
 
+			RemoveChild(InteractionDescriptor->InteractionWidget.Get());
+			
 			InteractionDescriptor->InteractionWidget = nullptr;
 			InteractionWidgetPool.Release(InteractionWidget);
 		}
 	}
-
-	if (IsValid(CurrentInteractionSlot))
-	{
-		CurrentInteractionSlot->ReleaseSlateResources(true);
-	}
 	
 	CurrentInteractionDescriptor = nullptr;
-	ClearChildren();
 }
 
 void UInteractionLayer::StartProject()
@@ -119,7 +120,7 @@ void UInteractionLayer::StartProject()
 			if (LocalPlayer->GetProjectionData(LocalPlayer->ViewportClient->Viewport, ProjectionData))
 			{
 				Project(CurrentInteractionDescriptor, ProjectionData, GetCachedGeometry().GetLocalSize(), ScreenPositionWithDepth);
-				CurrentInteractionSlot->SetPosition(FVector2D(ScreenPositionWithDepth));
+				CurrentInteractionSlot.Get()->SetPosition(FVector2D(ScreenPositionWithDepth));
 			}
 		}
 	}

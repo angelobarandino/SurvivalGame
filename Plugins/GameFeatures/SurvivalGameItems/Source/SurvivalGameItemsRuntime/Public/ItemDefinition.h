@@ -14,6 +14,8 @@ class SURVIVALGAMEITEMSRUNTIME_API UItemDefinition : public UObject
 	GENERATED_BODY()
 	
 public:
+	UItemDefinition(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Display")
 	FText DisplayName;
 

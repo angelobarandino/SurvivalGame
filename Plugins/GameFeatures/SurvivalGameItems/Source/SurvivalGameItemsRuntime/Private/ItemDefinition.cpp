@@ -5,6 +5,10 @@
 
 #include "ItemFragment.h"
 
+UItemDefinition::UItemDefinition(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+{
+}
+
 const UItemFragment* UItemDefinition::FindFragmentByClass(const TSubclassOf<UItemFragment> FragmentClass) const
 {
 	if (FragmentClass)

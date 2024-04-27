@@ -8,47 +8,35 @@ public class SurvivalGameItemsRuntime : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
-		PublicIncludePaths.AddRange(
-			new string[] {
-				// ... add public include paths required here ...
-			}
-			);
-				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				// ... add other private include paths required here ...
-			}
-			);
+		PublicIncludePaths.AddRange(new string[]
+		{
 			
+		});
 		
-		PublicDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"Core",
-				"SurvivalGame"
-				// ... add other public dependencies that you statically link with here ...
-			}
-			);
+		PrivateIncludePaths.AddRange(new string[]
+		{
 			
+		});
 		
-		PrivateDependencyModuleNames.AddRange(
-			new string[]
-			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
-				"SlateCore",
-				// ... add private dependencies that you statically link with here ...	
-			}
-			);
+		PublicDependencyModuleNames.AddRange(new string[]
+		{
+			"Core",
+			"SurvivalGame"
+		});
 		
+		PrivateDependencyModuleNames.AddRange(new string[]
+		{
+			"NetCore",
+			"CoreUObject",
+			"Engine",
+			"Slate",
+			"SlateCore",
+			"UMG"
+		});
 		
-		DynamicallyLoadedModuleNames.AddRange(
-			new string[]
-			{
-				// ... add any modules that your module loads dynamically here ...
-			}
-			);
+		DynamicallyLoadedModuleNames.AddRange(new string[]
+		{
+			
+		});
 	}
 }

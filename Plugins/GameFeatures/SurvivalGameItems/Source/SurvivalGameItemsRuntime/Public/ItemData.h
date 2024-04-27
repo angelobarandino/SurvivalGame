@@ -8,7 +8,7 @@
 
 class UItemDefinition;
 
-UCLASS()
+UCLASS(BlueprintType, Const, meta=(DisplayName = "Item Data"))
 class SURVIVALGAMEITEMSRUNTIME_API UItemData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
@@ -22,6 +22,6 @@ public:
 	TSubclassOf<UItemDefinition> ItemDef;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item")
-	TSoftObjectPtr<UStaticMesh> ItemMesh;
+	TObjectPtr<UStaticMesh> ItemMesh;
 	
 };
