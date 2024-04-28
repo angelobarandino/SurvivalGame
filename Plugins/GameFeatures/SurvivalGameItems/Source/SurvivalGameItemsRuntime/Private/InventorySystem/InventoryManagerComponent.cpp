@@ -79,9 +79,9 @@ FAddInventoryItemResult UInventoryManagerComponent::AddInventorItem(const TSubcl
 	int32 RemainingItemCount = ItemCount;
 	while (RemainingItemCount > 0)
 	{
-		const FAddInventoryItemRequest& AddItemRequest = InventoryList.MakeAddItemRequest(ItemDef);
+		const FAddInventoryItemRequest& AddItemRequest = InventoryList.MakeAddOrNewItemRequest(ItemDef);
 
-		if (AddItemRequest.Result == EFindItemSlotResult::CreateNewItem)
+		if (AddItemRequest.Result == EFindItemSlotResult::InsertNewItem)
 		{
 			FAddItemResult AddItemResult = InventoryList.CreateNewItem(AddItemRequest, RemainingItemCount);
 			RemainingItemCount -= AddItemResult.ItemsAdded;
@@ -99,6 +99,49 @@ FAddInventoryItemResult UInventoryManagerComponent::AddInventorItem(const TSubcl
 	}
 
 	return FAddInventoryItemResult::GenerateResult(ItemCount, RemainingItemCount);
+}
+
+bool UInventoryManagerComponent::MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot)
+{
+	if (CurrentSlot == NewSlot)
+	{
+		return false;
+	}
+	
+	if (FInventoryItemEntry* CurrentEntry = InventoryList.GetInventoryItemAtSlot(CurrentSlot))
+	{
+		if (const UInventoryItemInstance* CurrentItemInstance = CurrentEntry->ItemInstance)
+		{
+			const FAddInventoryItemRequest& MoveRequest = InventoryList.MakeAddItemRequestToSlot(NewSlot, CurrentItemInstance->GetItemDef());
+			
+			if (MoveRequest.Result == EFindItemSlotResult::ExistingItem)
+			{
+				const FAddItemResult ItemResult = InventoryList.AddItemToSlot(MoveRequest, CurrentEntry->ItemCount);
+				if (ItemResult.bSuccess)
+				{
+					InventoryList.RemoveItemStack(CurrentEntry->ItemInstance, ItemResult.ItemsAdded);
+					return true;
+				}
+			}
+			else if (MoveRequest.Result == EFindItemSlotResult::InsertNewItem)
+			{
+				InventoryList.MoveItemToSlot(*CurrentEntry, NewSlot);
+				return true;
+			}
+		}
+	}
+	
+	return false;
+}
+
+UInventoryItemInstance* UInventoryManagerComponent::FindItemInstanceInSlot(const int32 Slot)
+{
+	if (const FInventoryItemEntry* Entry = InventoryList.GetInventoryItemAtSlot(Slot))
+	{
+		return Entry->ItemInstance;
+	}
+
+	return nullptr;
 }
 
 void UInventoryManagerComponent::GetItemDefInventoryStack(const TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const

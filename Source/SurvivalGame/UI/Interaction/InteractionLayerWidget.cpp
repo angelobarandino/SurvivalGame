@@ -34,6 +34,11 @@ void UInteractionLayer::OnInitialize()
 
 void UInteractionLayer::ReleaseSlateResources(bool bReleaseChildren)
 {
+	if (CurrentInteractionSlot.Get())
+	{
+		CurrentInteractionSlot.Get()->ReleaseSlateResources(bReleaseChildren);
+	}
+	
 	Super::ReleaseSlateResources(bReleaseChildren);
 }
 
@@ -102,7 +107,7 @@ void UInteractionLayer::HideInteraction(UInteractionDescriptor* InteractionDescr
 
 			RemoveChild(InteractionDescriptor->InteractionWidget.Get());
 			
-			InteractionDescriptor->InteractionWidget = nullptr;
+			// InteractionDescriptor->InteractionWidget = nullptr;
 			InteractionWidgetPool.Release(InteractionWidget);
 		}
 	}

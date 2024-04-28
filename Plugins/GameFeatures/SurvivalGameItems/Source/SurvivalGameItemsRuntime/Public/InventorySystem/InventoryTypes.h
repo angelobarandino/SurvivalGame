@@ -6,6 +6,41 @@
 
 class UInventoryItemInstance;
 class UItemDefinition;
+
+
+///////////////////////////////////////////////////////////////////////
+/*
+ * FInventoryChangeMessage
+ */
+UENUM(BlueprintType)
+enum class EInventoryChangeAction : uint8
+{
+	ItemAdded,
+	ItemRemoved,
+	ItemMovedToSlot,
+	ItemStackChanged
+};
+
+USTRUCT(BlueprintType)
+struct FInventoryChangeMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	EInventoryChangeAction ChangeAction;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	TObjectPtr<UInventoryItemInstance> ItemInstance = nullptr;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	int32 ItemCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	int32 OldItemSlot = 0;
+};
+
+
+
 ///////////////////////////////////////////////////////////////////////
 /*
  * FAddItemResult
@@ -54,9 +89,10 @@ struct FAddInventoryItemResult
 UENUM()
 enum class EFindItemSlotResult : uint8
 {
+	Invalid,
 	InventoryFull,
-	CreateNewItem,
-	ExistingItem
+	InsertNewItem,
+	ExistingItem,
 };
 
 USTRUCT()
@@ -69,7 +105,7 @@ struct FAddInventoryItemRequest
 		, SlotMaxStack(1)
 		, bSlotCanStack(false)
 		, SlotCurrentItems(0)
-		, Result(EFindItemSlotResult::InventoryFull)
+		, Result(EFindItemSlotResult::Invalid)
 		, ItemDef(nullptr)
 	{}
 
@@ -106,3 +142,4 @@ struct FAddItemResult
 	UPROPERTY()
 	TWeakObjectPtr<UInventoryItemInstance> Instance = nullptr;
 };
+

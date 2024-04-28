@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "InventoryItemInstance.h"
 #include "InventoryTypes.h"
 #include "ItemDefinition.h"
 #include "Net/Serialization/FastArraySerializer.h"
@@ -19,6 +20,13 @@ struct FInventoryItemEntry : public FFastArraySerializerItem
 	
 	UPROPERTY()
 	int32 ItemCount = 0;
+
+	UPROPERTY(NotReplicated)
+	int32 LastObserveItemCount = 0;
+	
+	UPROPERTY(NotReplicated)
+	int32 LastObserveItemSlot = 0;
+
 };
 
 USTRUCT(BlueprintType)
@@ -42,7 +50,10 @@ struct FInventoryItemList : public FFastArraySerializer
 
 
 public:
-	FAddInventoryItemRequest MakeAddItemRequest(const TSubclassOf<UItemDefinition>& ItemDef);
+	void MarkItemDirtyAndBroadcastChange(FInventoryItemEntry& Entry);
+	
+	FAddInventoryItemRequest MakeAddItemRequestToSlot(const int32 Slot, const TSubclassOf<UItemDefinition>& ItemDef);
+	FAddInventoryItemRequest MakeAddOrNewItemRequest(const TSubclassOf<UItemDefinition>& ItemDef);
 
 	FInventoryItemEntry* GetInventoryItemAtSlot(const int32 Slot);
 
@@ -51,7 +62,12 @@ public:
 	FAddItemResult AddItemToSlot(const FAddInventoryItemRequest& ItemRequest, const int32 ItemCount);
 
 	int32 CalculateItemsCanAddToStack(const int32 MaxItemStack, const int32 CurrenItems, const int32 ItemsToAdd) const;
-	
+
+	void MoveItemToSlot(FInventoryItemEntry& Entry, const int32 NewSlot) const;
+
+	void RemoveItemEntry(const UInventoryItemInstance* ItemInstance);
+	void RemoveItemStack(const UInventoryItemInstance* ItemInstance, const int32 RemoveCount);
+
 private:
 	friend UInventoryManagerComponent;
 	
@@ -60,6 +76,8 @@ private:
 
 	UPROPERTY(NotReplicated)
 	UInventoryManagerComponent* OwnerInventory;
+
+	void BroadcastItemsChangeMessage(const FInventoryItemEntry& Entry, const int32 NewItemCount, const int32 NewItemSlot) const;
 };
 
 template<>

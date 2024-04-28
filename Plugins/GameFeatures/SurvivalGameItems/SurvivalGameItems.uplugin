@@ -28,6 +28,10 @@
 		{
 			"Name": "SurvivalGameCore",
 			"Enabled": true
+		},
+		{
+			"Name": "GameplayMessageRouter",
+			"Enabled": true
 		}
 	]
 }

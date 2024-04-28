@@ -17,7 +17,7 @@ struct FSGInputAction
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSoftObjectPtr<const UInputAction> InputAction;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (Categories="InputTag"))
 	FGameplayTag InputTag;
 };
 
