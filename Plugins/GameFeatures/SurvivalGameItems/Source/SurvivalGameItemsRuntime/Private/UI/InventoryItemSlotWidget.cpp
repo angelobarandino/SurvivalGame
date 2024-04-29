@@ -3,11 +3,15 @@
 
 #include "UI/InventoryItemSlotWidget.h"
 
+#include "ItemDefinitionLibrary.h"
+#include "ItemFragment_Inventory.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Engine/AssetManager.h"
 #include "InventorySystem/InventoryItemDragDropOperation.h"
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventorySystem/InventoryManagerComponent.h"
 #include "UI/InventoryItemDragPreview.h"
+#include "UI/InventoryItemTooltip.h"
 
 UInventoryItemSlotWidget::UInventoryItemSlotWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -22,15 +26,50 @@ void UInventoryItemSlotWidget::SetInventorySlotItemInstance(const UInventoryItem
 	}
 
 	CurrentItemInstance = ItemInstance;
-	SetInventorySlotItem(ItemInstance);
+	SetInventorySlotItem(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
+	SetInventoryItemTooltip();
 }
 
-void UInventoryItemSlotWidget::SetInventorySlotItem_Implementation(const UInventoryItemInstance* ItemInstance)
+void UInventoryItemSlotWidget::ClearInventorySlotItemInstance()
 {
+	EmptyInventorySlot();
+	CurrentItemInstance.Reset();
 }
 
-void UInventoryItemSlotWidget::EmptyInventorySlot_Implementation()
+void UInventoryItemSlotWidget::SetInventoryItemTooltip()
 {
+	if (CurrentItemInstance.IsValid() && CurrentItemInstance.Get()->GetItemDef())
+	{
+		const UItemFragment_Inventory* InventoryFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<
+			UItemFragment_Inventory>(CurrentItemInstance.Get()->GetItemDef());
+
+		if (InventoryFragment != nullptr && !InventoryFragment->TooltipWidgetClass.IsNull())
+		{
+			TooltipWidgetSoftClass = InventoryFragment->TooltipWidgetClass;
+			StreamingHandle = UAssetManager::Get().GetStreamableManager().RequestAsyncLoad(
+				TooltipWidgetSoftClass.ToSoftObjectPath(),
+				FStreamableDelegate::CreateUObject(this, &ThisClass::OnTooltipWidgetLoaded),
+				FStreamableManager::AsyncLoadHighPriority
+			);
+		}
+	}
+}
+
+void UInventoryItemSlotWidget::OnTooltipWidgetLoaded()
+{
+	if (CurrentItemInstance.Get())
+	{
+		if (const TSubclassOf<UInventoryItemTooltip> UserWidgetClass = TooltipWidgetSoftClass.Get())
+		{
+			if (UInventoryItemTooltip* TooltipWidget = Cast<UInventoryItemTooltip>(UWidgetBlueprintLibrary::Create(GetWorld(), UserWidgetClass, GetOwningPlayer())))
+			{
+				TooltipWidget->SetItemData(CurrentItemInstance->GetItemDef(), CurrentItemInstance->GetItemCount());
+				SetToolTip(TooltipWidget);
+			}
+		}
+	}
+
+	StreamingHandle.Reset();
 }
 
 void UInventoryItemSlotWidget::NativeConstruct()
@@ -47,7 +86,7 @@ FReply UInventoryItemSlotWidget::NativeOnPreviewMouseButtonDown(const FGeometry&
 {
 	Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 
-	if (CurrentItemInstance && InventoryManager)
+	if (CurrentItemInstance.Get() && InventoryManager)
 	{
 		if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
 		{
@@ -62,23 +101,19 @@ void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry,
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
 
-	if (CurrentItemInstance == nullptr || InventoryManager == nullptr)
+	if (CurrentItemInstance.Get() && InventoryManager)
 	{
-		return;
-	}
-	
-	if (UUserWidget* PreviewWidget = CreateDragPreview())
-	{
-		UInventoryItemDragDropOperation* DragDropOperation = Cast<UInventoryItemDragDropOperation>(
-			UWidgetBlueprintLibrary::CreateDragDropOperation(UInventoryItemDragDropOperation::StaticClass()));
-		
-		if (DragDropOperation)
+		if (UUserWidget* PreviewWidget = CreateDragPreview())
 		{
-			DragDropOperation->DefaultDragVisual = PreviewWidget;
-			DragDropOperation->DraggedItemInstance = CurrentItemInstance;
-			DragDropOperation->DraggedItemSlot = CurrentItemInstance->GetItemSlot();
-			DragDropOperation->SourceInventory = InventoryManager;
-			OutOperation = DragDropOperation;
+			if (UInventoryItemDragDropOperation* DragDropOperation = Cast<UInventoryItemDragDropOperation>(
+				UWidgetBlueprintLibrary::CreateDragDropOperation(UInventoryItemDragDropOperation::StaticClass())))
+			{
+				DragDropOperation->DefaultDragVisual = PreviewWidget;
+				DragDropOperation->DraggedItemInstance = CurrentItemInstance.Get();
+				DragDropOperation->DraggedItemSlot = CurrentItemInstance->GetItemSlot();
+				DragDropOperation->SourceInventory = InventoryManager;
+				OutOperation = DragDropOperation;
+			}
 		}
 	}
 }

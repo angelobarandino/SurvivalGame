@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ItemData.h"
 #include "Engine/DataAsset.h"
 #include "ItemDefinition.generated.h"
 
@@ -16,15 +17,26 @@ class SURVIVALGAMEITEMSRUNTIME_API UItemDefinition : public UObject
 public:
 	UItemDefinition(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Display")
-	FText DisplayName;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Identifier")
+	FText ItemName;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Display")
-	TArray<TObjectPtr<UItemFragment>> Fragments;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Identifier")
+	EItemType ItemType;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Identifier", meta=(MultiLine=true))
+	FText Description;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Identifier", meta=(MultiLine=true))
+	FText Usage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Instanced, Category = "Fragments")
+	TArray<TObjectPtr<UItemFragment>> Fragments;
+
+	// @TODO: REMOVE! This might not be needed
 	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = FragmentClass))
 	const UItemFragment* FindFragmentByClass(TSubclassOf<UItemFragment> FragmentClass) const;
 
+	// @TODO: REMOVE! This might not be needed
 	template<class T = UItemFragment>
 	const T* FindFragmentByClass() const;
 };

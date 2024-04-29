@@ -17,7 +17,6 @@ public:
 	virtual bool IsSupportedForNetworking() const override { return true; }
 	//~End of UObject
 
-	
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
 	TSubclassOf<UItemDefinition> GetItemDef() const
 	{

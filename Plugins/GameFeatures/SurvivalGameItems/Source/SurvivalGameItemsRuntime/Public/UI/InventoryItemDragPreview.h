@@ -17,7 +17,7 @@ class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemDragPreview : public UCommonUse
 
 public:
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<const UInventoryItemInstance> ItemInstance = nullptr;
+	TWeakObjectPtr<const UInventoryItemInstance> ItemInstance;
 
 	virtual void NativeDestruct() override;
 	

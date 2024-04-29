@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "InventorySystem/InventoryItemInstance.h"
 #include "InventoryItemSlotWidget.generated.h"
 
 
+struct FStreamableHandle;
+class UInventoryItemTooltip;
 class UInventoryManagerComponent;
 class UInventoryItemDragPreview;
-class UInventoryItemInstance;
 
 UCLASS()
 class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemSlotWidget : public UUserWidget
@@ -18,9 +20,12 @@ class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemSlotWidget : public UUserWidget
 
 public:
 	UInventoryItemSlotWidget(const FObjectInitializer& ObjectInitializer);
-	
+
 	UFUNCTION(BlueprintCallable)
 	void SetInventorySlotItemInstance(const UInventoryItemInstance* ItemInstance);
+	
+	UFUNCTION(BlueprintCallable)
+	void ClearInventorySlotItemInstance();
 	
 	UFUNCTION(BlueprintCallable)
 	void SetInventorySlotIndex(const int32 InSlotIndex)
@@ -28,16 +33,18 @@ public:
 		SlotIndex = InSlotIndex;
 	}
 	
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void EmptyInventorySlot();
-
 protected:
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void SetInventorySlotItem(const UInventoryItemInstance* ItemInstance);
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetInventorySlotItem(TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void EmptyInventorySlot();
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item")
 	TSubclassOf<UInventoryItemDragPreview> DragPreviewWidgetClass;
 
+	void SetInventoryItemTooltip();
+	void OnTooltipWidgetLoaded();
 
 	// ~Begin UUserWidget
 	virtual void NativeConstruct() override;
@@ -45,8 +52,11 @@ protected:
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation) override;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	// ~End UUserWidget
-	
+
 private:
+	TSoftClassPtr<UInventoryItemTooltip> TooltipWidgetSoftClass;
+	TSharedPtr<FStreamableHandle> StreamingHandle;
+
 	UPROPERTY()
 	int32 SlotIndex = -1;
 
@@ -54,7 +64,7 @@ private:
 	TObjectPtr<UInventoryManagerComponent> InventoryManager;
 
 	UPROPERTY()
-	TObjectPtr<const UInventoryItemInstance> CurrentItemInstance;
+	TWeakObjectPtr<const UInventoryItemInstance> CurrentItemInstance;
 
 	UUserWidget* CreateDragPreview();
 };

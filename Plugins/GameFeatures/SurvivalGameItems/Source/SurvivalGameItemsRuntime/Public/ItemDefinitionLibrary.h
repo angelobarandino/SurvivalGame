@@ -17,6 +17,7 @@ class SURVIVALGAMEITEMSRUNTIME_API UItemDefinitionLibrary : public UBlueprintFun
 	GENERATED_BODY()
 
 public:
+	
 	UFUNCTION(BlueprintCallable, meta=(DeterminesOutputType=FragmentClass))
 	static const UItemFragment* FindItemDefinitionFragment(TSubclassOf<UItemDefinition> ItemDef, TSubclassOf<UItemFragment> FragmentClass);
 

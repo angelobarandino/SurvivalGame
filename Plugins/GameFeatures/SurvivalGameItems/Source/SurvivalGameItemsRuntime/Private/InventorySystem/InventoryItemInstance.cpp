@@ -1,5 +1,6 @@
 ﻿#include "InventorySystem/InventoryItemInstance.h"
 
+#include "ItemDefinition.h"
 #include "ItemDefinitionLibrary.h"
 #include "ItemFragment_Inventory.h"
 #include "Net/UnrealNetwork.h"
