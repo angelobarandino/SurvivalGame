@@ -18,9 +18,11 @@ class SURVIVALGAMEITEMSRUNTIME_API AItemPickup : public AInteractableActor, publ
 public:
 	AItemPickup(const FObjectInitializer& ObjectInitializer);
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 	virtual void OnConstruction(const FTransform& Transform) override;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Pickup, Category = "Item Pickup", meta = (ExposeOnSpawn))
 	FPickupInstance Pickup;
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
@@ -30,9 +32,20 @@ public:
 	virtual FInventoryPickup GetPickupInventory() const override;
 	virtual void OnPickupAddedToInventory(const FPickupInstance& PickupInstance, const FAddInventoryItemResult& AddItemResult) override;
 	// ~End IPickupable
+
+	void SetPickupItems(const FPickupInstance& InPickup);
+
+	UFUNCTION(Server, Reliable)
+	void Server_Destroy();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_OnPickup(const FPickupInstance& PickupInstance, const FAddInventoryItemResult& AddItemResult);
 	
-protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> ItemPickupMesh;
-	
+
+protected:
+	UFUNCTION()
+	void OnRep_Pickup();
+
 };

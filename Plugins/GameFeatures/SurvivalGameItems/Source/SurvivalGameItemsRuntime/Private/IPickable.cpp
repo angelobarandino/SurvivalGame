@@ -23,7 +23,7 @@ TScriptInterface<IPickupable> UPickupableStatics::GetPickupableFromActor(AActor*
 
 void UPickupableStatics::AddPickupToInventory(APlayerController* PlayerController, const TScriptInterface<IPickupable> Pickup)
 {
-	if (PlayerController == nullptr)
+	if (PlayerController == nullptr || Pickup.GetObject() == nullptr)
 	{
 		return;
 	}

@@ -54,7 +54,7 @@ TSharedRef<SWidget> UInteractionLayer::RebuildWidget()
 
 void UInteractionLayer::ShowInteraction(UInteractionDescriptor* InteractionDescriptor)
 {
-	InteractionWidgetPool.RebuildWidgets();
+	ClearChildren();
 
 	if (InteractionDescriptor)
 	{
@@ -107,7 +107,7 @@ void UInteractionLayer::HideInteraction(UInteractionDescriptor* InteractionDescr
 
 			RemoveChild(InteractionDescriptor->InteractionWidget.Get());
 			
-			// InteractionDescriptor->InteractionWidget = nullptr;
+			InteractionDescriptor->InteractionWidget = nullptr;
 			InteractionWidgetPool.Release(InteractionWidget);
 		}
 	}

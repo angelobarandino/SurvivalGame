@@ -143,3 +143,25 @@ struct FAddItemResult
 	TWeakObjectPtr<UInventoryItemInstance> Instance = nullptr;
 };
 
+
+
+
+///////////////////////////////////////////////////////////////////////
+/*
+ * FDropInventoryItemTemplate
+ */
+USTRUCT(BlueprintType)
+struct FDropInventoryItemTemplate
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TWeakObjectPtr<UInventoryItemInstance> ItemInstance;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FTransform DropLocation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TWeakObjectPtr<APlayerController> PlayerController;
+};
+

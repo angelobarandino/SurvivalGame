@@ -9,6 +9,7 @@
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventorySystem/InventoryItemList.h"
 #include "Net/UnrealNetwork.h"
+#include "Pickups/ItemPickup.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryManagerComponent)
 
@@ -26,6 +27,7 @@ void UInventoryManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ThisClass, InventoryList);
+	DOREPLIFETIME(ThisClass, MaxInventorySize);
 }
 
 bool UInventoryManagerComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
@@ -103,35 +105,22 @@ FAddInventoryItemResult UInventoryManagerComponent::AddInventorItem(const TSubcl
 
 bool UInventoryManagerComponent::MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot)
 {
-	if (CurrentSlot == NewSlot)
+	Server_MoveInventorItem(CurrentSlot, NewSlot);
+	return true;
+}
+
+bool UInventoryManagerComponent::RemoveInventoryItem(const UInventoryItemInstance* ItemInstance)
+{
+	Server_RemoveInventoryItem(ItemInstance);
+	return true;
+}
+
+void UInventoryManagerComponent::DropInventoryItem(const FDropInventoryItemTemplate& DropItemTemplate)
+{
+	if (DropItemTemplate.ItemInstance.IsValid())
 	{
-		return false;
+		Server_DropInventoryItem(DropItemTemplate);
 	}
-	
-	if (FInventoryItemEntry* CurrentEntry = InventoryList.GetInventoryItemAtSlot(CurrentSlot))
-	{
-		if (const UInventoryItemInstance* CurrentItemInstance = CurrentEntry->ItemInstance)
-		{
-			const FAddInventoryItemRequest& MoveRequest = InventoryList.MakeAddItemRequestToSlot(NewSlot, CurrentItemInstance->GetItemDef());
-			
-			if (MoveRequest.Result == EFindItemSlotResult::ExistingItem)
-			{
-				const FAddItemResult ItemResult = InventoryList.AddItemToSlot(MoveRequest, CurrentEntry->ItemCount);
-				if (ItemResult.bSuccess)
-				{
-					InventoryList.RemoveItemStack(CurrentEntry->ItemInstance, ItemResult.ItemsAdded);
-					return true;
-				}
-			}
-			else if (MoveRequest.Result == EFindItemSlotResult::InsertNewItem)
-			{
-				InventoryList.MoveItemToSlot(*CurrentEntry, NewSlot);
-				return true;
-			}
-		}
-	}
-	
-	return false;
 }
 
 UInventoryItemInstance* UInventoryManagerComponent::FindItemInstanceInSlot(const int32 Slot)
@@ -175,3 +164,80 @@ void UInventoryManagerComponent::ReplicateNewItemInstance(UInventoryItemInstance
 	}
 }
 
+void UInventoryManagerComponent::Server_MoveInventorItem_Implementation(const int32 CurrentSlot, const int32 NewSlot)
+{
+	if (CurrentSlot == NewSlot)
+	{
+		return;
+	}
+	
+	if (FInventoryItemEntry* CurrentEntry = InventoryList.GetInventoryItemAtSlot(CurrentSlot))
+	{
+		if (const UInventoryItemInstance* CurrentItemInstance = CurrentEntry->ItemInstance)
+		{
+			const FAddInventoryItemRequest& MoveRequest = InventoryList.MakeAddItemRequestToSlot(NewSlot, CurrentItemInstance->GetItemDef());
+			
+			if (MoveRequest.Result == EFindItemSlotResult::ExistingItem)
+			{
+				const FAddItemResult ItemResult = InventoryList.AddItemToSlot(MoveRequest, CurrentEntry->ItemCount);
+				if (ItemResult.bSuccess)
+				{
+					InventoryList.RemoveItemStack(CurrentEntry->ItemInstance, ItemResult.ItemsAdded);
+				}
+			}
+			else if (MoveRequest.Result == EFindItemSlotResult::InsertNewItem)
+			{
+				InventoryList.MoveItemToSlot(*CurrentEntry, NewSlot);
+			}
+		}
+	}
+}
+
+bool UInventoryManagerComponent::Server_MoveInventorItem_Validate(const int32 CurrentSlot, const int32 NewSlot)
+{
+	return true;
+}
+
+void UInventoryManagerComponent::Server_RemoveInventoryItem_Implementation(const UInventoryItemInstance* ItemInstance)
+{
+	if (ItemInstance)
+	{
+		InventoryList.RemoveItemEntry(ItemInstance);
+	}
+}
+
+bool UInventoryManagerComponent::Server_RemoveInventoryItem_Validate(const UInventoryItemInstance* ItemInstance)
+{
+	return ItemInstance != nullptr;
+}
+
+void UInventoryManagerComponent::Server_DropInventoryItem_Implementation( const FDropInventoryItemTemplate& DropItemTemplate)
+{
+	if (!DropItemTemplate.ItemInstance.IsValid() || !DropItemTemplate.PlayerController.IsValid())
+	{
+		return;
+	}
+
+	if (APawn* Pawn = DropItemTemplate.PlayerController->GetPawn())
+	{
+		const UInventoryItemInstance* ItemInstance = DropItemTemplate.ItemInstance.Get();
+		
+		AItemPickup* ItemPickup = Pawn->GetWorld()->SpawnActorDeferred<AItemPickup>(AItemPickup::StaticClass(),
+			DropItemTemplate.DropLocation, nullptr, Pawn,
+			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn
+		);
+
+		ItemPickup->ItemPickupMesh->SetSimulatePhysics(true);
+		ItemPickup->Pickup = FPickupInstance(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
+		
+		if (RemoveInventoryItem(ItemInstance))
+		{
+			ItemPickup->FinishSpawning(DropItemTemplate.DropLocation);
+		}
+	}
+}
+
+bool UInventoryManagerComponent::Server_DropInventoryItem_Validate(const FDropInventoryItemTemplate& DropItemTemplate)
+{
+	return DropItemTemplate.ItemInstance.IsValid() && DropItemTemplate.PlayerController.Get();
+}

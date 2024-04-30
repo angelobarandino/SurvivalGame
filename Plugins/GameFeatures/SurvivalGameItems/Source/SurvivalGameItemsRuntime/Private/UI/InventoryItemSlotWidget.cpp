@@ -5,11 +5,14 @@
 
 #include "ItemDefinitionLibrary.h"
 #include "ItemFragment_Inventory.h"
+#include "SurvivalGameItems.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Components/PanelWidget.h"
 #include "Engine/AssetManager.h"
 #include "InventorySystem/InventoryItemDragDropOperation.h"
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventorySystem/InventoryManagerComponent.h"
+#include "UI/InventoryGrid.h"
 #include "UI/InventoryItemDragPreview.h"
 #include "UI/InventoryItemTooltip.h"
 
@@ -33,12 +36,12 @@ void UInventoryItemSlotWidget::SetInventorySlotItemInstance(const UInventoryItem
 void UInventoryItemSlotWidget::ClearInventorySlotItemInstance()
 {
 	EmptyInventorySlot();
-	CurrentItemInstance.Reset();
+	CurrentItemInstance = nullptr;
 }
 
 void UInventoryItemSlotWidget::SetInventoryItemTooltip()
 {
-	if (CurrentItemInstance.IsValid() && CurrentItemInstance.Get()->GetItemDef())
+	if (CurrentItemInstance && CurrentItemInstance->GetItemDef())
 	{
 		const UItemFragment_Inventory* InventoryFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<
 			UItemFragment_Inventory>(CurrentItemInstance.Get()->GetItemDef());
@@ -79,6 +82,51 @@ void UInventoryItemSlotWidget::NativeConstruct()
 	if (const APlayerController* PC = GetOwningPlayer())
 	{
 		InventoryManager = PC->FindComponentByClass<UInventoryManagerComponent>();
+	}
+}
+
+void UInventoryItemSlotWidget::NativeDestruct()
+{
+	InventoryManager = nullptr;
+	CurrentItemInstance = nullptr;
+	TooltipWidgetSoftClass = nullptr;
+	
+	Super::NativeDestruct();
+}
+
+FReply UInventoryItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (CurrentItemInstance)
+	{
+		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
+	}
+
+	return FReply::Unhandled();
+}
+
+void UInventoryItemSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
+{
+	if (CurrentItemInstance)
+	{
+		Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+
+		if (InventoryManager)
+		{
+			InventoryManager->SetFocusedItem(CurrentItemInstance);
+		}
+	}
+}
+
+void UInventoryItemSlotWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
+{
+	if (CurrentItemInstance)
+	{
+		Super::NativeOnMouseLeave(InMouseEvent);
+		
+		if (InventoryManager)
+		{
+			InventoryManager->SetFocusedItem(nullptr);
+		}
 	}
 }
 
@@ -128,8 +176,15 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 
 		if (InventoryManager == SourceInventoryManager)
 		{
-			return InventoryManager->MoveInventorItem(Operation->DraggedItemSlot, SlotIndex);
+			InventoryManager->MoveInventorItem(Operation->DraggedItemSlot, SlotIndex);
 		}
+
+		if (InventoryManager)
+		{
+			InventoryManager->SetFocusedItem(Operation->DraggedItemInstance.Get());
+		}
+		
+		return true;
 	}
 	
 	return false;

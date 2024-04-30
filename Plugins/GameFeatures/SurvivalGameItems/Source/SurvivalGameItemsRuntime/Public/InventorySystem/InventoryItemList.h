@@ -63,9 +63,9 @@ public:
 
 	int32 CalculateItemsCanAddToStack(const int32 MaxItemStack, const int32 CurrenItems, const int32 ItemsToAdd) const;
 
-	void MoveItemToSlot(FInventoryItemEntry& Entry, const int32 NewSlot) const;
+	void MoveItemToSlot(FInventoryItemEntry& Entry, const int32 NewSlot);
 
-	void RemoveItemEntry(const UInventoryItemInstance* ItemInstance);
+	bool RemoveItemEntry(const UInventoryItemInstance* ItemInstance);
 	void RemoveItemStack(const UInventoryItemInstance* ItemInstance, const int32 RemoveCount);
 
 private:

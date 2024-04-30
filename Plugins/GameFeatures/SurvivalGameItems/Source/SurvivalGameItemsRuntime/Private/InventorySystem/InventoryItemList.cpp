@@ -282,14 +282,14 @@ int32 FInventoryItemList::CalculateItemsCanAddToStack(const int32 MaxItemStack, 
 	return ItemsCanAddToStack;
 }
 
-void FInventoryItemList::MoveItemToSlot(FInventoryItemEntry& Entry, const int32 NewSlot) const
+void FInventoryItemList::MoveItemToSlot(FInventoryItemEntry& Entry, const int32 NewSlot)
 {
 	Entry.ItemInstance->ItemSlot = NewSlot;
-	BroadcastItemsChangeMessage(Entry, Entry.LastObserveItemCount, NewSlot);
+	MarkItemDirtyAndBroadcastChange(Entry);
 	Entry.LastObserveItemSlot = NewSlot;
 }
 
-void FInventoryItemList::RemoveItemEntry(const UInventoryItemInstance* ItemInstance)
+bool FInventoryItemList::RemoveItemEntry(const UInventoryItemInstance* ItemInstance)
 {
 	for (auto EntryIt = Items.CreateIterator(); EntryIt; ++EntryIt)
 	{
@@ -303,9 +303,11 @@ void FInventoryItemList::RemoveItemEntry(const UInventoryItemInstance* ItemInsta
 			
 			EntryIt.RemoveCurrent();
 			MarkArrayDirty();
-			break;
+			return true;
 		}
 	}
+
+	return false;
 }
 
 void FInventoryItemList::RemoveItemStack(const UInventoryItemInstance* ItemInstance, const int32 RemoveCount)

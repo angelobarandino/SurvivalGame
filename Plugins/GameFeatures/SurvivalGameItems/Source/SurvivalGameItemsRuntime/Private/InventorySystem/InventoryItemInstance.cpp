@@ -11,6 +11,7 @@ void UInventoryItemInstance::GetLifetimeReplicatedProps(TArray<FLifetimeProperty
 
 	DOREPLIFETIME(ThisClass, ItemDef);
 	DOREPLIFETIME(ThisClass, ItemCount);
+	DOREPLIFETIME(ThisClass, ItemSlot);
 }
 
 const UItemFragment* UInventoryItemInstance::FindFragmentByClass(const TSubclassOf<UItemFragment> FragmentClass) const

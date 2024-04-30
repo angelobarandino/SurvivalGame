@@ -42,7 +42,7 @@ private:
 	UPROPERTY(Replicated)
 	int32 ItemCount;
 
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	int32 ItemSlot;
 	
 };
