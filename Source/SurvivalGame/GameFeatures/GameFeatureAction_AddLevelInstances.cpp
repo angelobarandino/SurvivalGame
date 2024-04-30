@@ -143,20 +143,30 @@ void UGameFeatureAction_AddLevelInstances::AddLevelInstance(const AActor* Actor,
 			{
 				if (const UWorld* TargetWorld = Entry.TargetWorld.Get())
 				{
-					if (World->OriginalWorldName == TargetWorld->OriginalWorldName)
+					if (TargetWorld != World)
 					{
-						bool bSuccess = false;
-						ULevelStreamingDynamic* StreamingLevelRef = ULevelStreamingDynamic::LoadLevelInstanceBySoftObjectPtr(World, Entry.Level, Entry.Location, Entry.Rotation, bSuccess);
+						continue;
+					}
 
-						if (!bSuccess)
-						{
-							UE_LOG(LogSurvivalGame, Error, TEXT("[GameFeatureData %s]: Failed to load level instance `%s`."), *GetPathNameSafe(this), *Entry.Level.ToString());
-						}
+					FString LevelName;
+					if (!Entry.LevelName.IsEmpty())
+					{
+						LevelName = Entry.LevelName + TEXT("_StreamingLevel");;
+					}
+					
+					bool bSuccess = false;
+					ULevelStreamingDynamic* StreamingLevelRef = ULevelStreamingDynamic::LoadLevelInstanceBySoftObjectPtr(World, Entry.Level, Entry.Location, Entry.Rotation, bSuccess, LevelName);
 
-						if (bSuccess)
-						{
-							ActorData.AddedLevels.Add(StreamingLevelRef);
-						}
+					const FString ActorRoleName = GetActorRole(Actor);
+					if (!bSuccess)
+					{
+						UE_LOG(LogSurvivalGame, Error, TEXT("[GameFeatureData %s]: Failed to load level instance `%s` on Actor `%s` [ROLE: %s]."), *GetPathNameSafe(this), *Entry.Level.ToString(), *GetNameSafe(Actor), *ActorRoleName);
+					}
+
+					if (bSuccess)
+					{
+						UE_LOG(LogSurvivalGame, Log, TEXT("[GameFeatureData %s]: Success loading level instance `%s` on Actor `%s` [ROLE: %s]."), *GetPathNameSafe(this), *Entry.Level.ToString(), *GetNameSafe(Actor), *ActorRoleName);
+						ActorData.AddedLevels.Add(StreamingLevelRef);
 					}
 				}
 			}
@@ -186,6 +196,29 @@ void UGameFeatureAction_AddLevelInstances::CleanUpAddedLevel(ULevelStreamingDyna
 		Level->OnLevelLoaded.RemoveAll(this);
 		Level->SetIsRequestingUnloadAndRemoval(true);
 	}
+}
+
+FString UGameFeatureAction_AddLevelInstances::GetActorRole(const AActor* Actor) const
+{
+	FString RoleString;
+	switch (Actor->GetLocalRole()) {
+	case ROLE_None:
+		RoleString = TEXT("None");
+		break;
+	case ENetRole::ROLE_SimulatedProxy:
+		RoleString = TEXT("Simulated Only");
+		break;
+	case ENetRole::ROLE_AutonomousProxy:
+		RoleString = TEXT("Autonomous Proxy");
+		break;
+	case ENetRole::ROLE_Authority:
+		RoleString = TEXT("Authority");
+		break;
+	case ENetRole::ROLE_MAX:
+		RoleString = TEXT("Invalid Role");
+		break;
+	}
+	return RoleString;
 }
 
 //////////////////////////////////////////////////////////////////////

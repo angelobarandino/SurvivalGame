@@ -27,6 +27,9 @@ struct FGameFeatureLevelInstanceEntry
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, Category="Instance Info")
+	FString LevelName;
+	
 	// The level instance to dynamically load at runtime.
 	UPROPERTY(EditAnywhere, Category="Instance Info")
 	TSoftObjectPtr<UWorld> Level;
@@ -96,4 +99,5 @@ private:
 	void RemoveLevelInstance(const AActor* Actor, FPerContextData& ActiveData) const;
 
 	void CleanUpAddedLevel(ULevelStreamingDynamic* Level) const;
+	FString GetActorRole(const AActor* Actor) const;
 };
