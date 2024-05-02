@@ -7,6 +7,8 @@
 #include "Components/ControllerComponent.h"
 #include "InteractionManagerComponent.generated.h"
 
+class UCommonActivatableWidget;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHoldToInteractProgress, float, Progress);
 
 UCLASS(BlueprintType, Blueprintable)
@@ -17,9 +19,11 @@ class SURVIVALGAME_API UInteractionManagerComponent : public UControllerComponen
 public:
 	UInteractionManagerComponent(const FObjectInitializer& ObjectInitializer);
 
+	void CallInteractInputActionActivate(const FGameplayTag InputTag, const FGameplayTag InteractOptionTag) const;
 	void ShowInteraction(UInteractionDescriptor* InInteractionDescriptor);
 	void HideInteraction();
-	
+	void PushContentToInteractionPrompt(const TSubclassOf<UCommonActivatableWidget> WidgetClass) const;
+
 	DECLARE_DELEGATE_OneParam(FInteractionEvent, UInteractionDescriptor*);
 	FInteractionEvent OnShowInteraction;
 	FInteractionEvent OnHideInteraction;
@@ -34,7 +38,8 @@ public:
 	FHoldToInteractProgress OnHoldProgress;
 	
 private:
-	TWeakObjectPtr<UInteractionDescriptor> InteractionDescriptor;
+	UPROPERTY()
+	TObjectPtr<UInteractionDescriptor> InteractionDescriptor;
 
 	FTimerHandle HoldTimerHandle;
 	float HoldTimerDuration = 0.f;

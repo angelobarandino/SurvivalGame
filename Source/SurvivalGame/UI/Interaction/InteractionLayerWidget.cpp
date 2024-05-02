@@ -27,7 +27,6 @@ void UInteractionLayer::OnInitialize()
 		{
 			InteractionManager->OnShowInteraction.BindUObject(this, &ThisClass::ShowInteraction);
 			InteractionManager->OnHideInteraction.BindUObject(this, &ThisClass::HideInteraction);
-
 		}
 	}
 }
@@ -62,7 +61,7 @@ void UInteractionLayer::ShowInteraction(UInteractionDescriptor* InteractionDescr
 		if (!InteractionClass.IsNull())
 		{
 			CurrentInteractionDescriptor = InteractionDescriptor;
-			
+
 			AsyncLoad(InteractionClass, [this, InteractionClass, InteractionDescriptor]()
 			{
 				if (UInteractionDescriptor* Interaction = InteractionDescriptor)

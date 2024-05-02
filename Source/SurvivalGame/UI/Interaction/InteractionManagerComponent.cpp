@@ -2,7 +2,8 @@
 
 
 #include "InteractionManagerComponent.h"
-
+#include "CommonActivatableWidget.h"
+#include "InteractionWidgetInterface.h"
 
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InteractionManagerComponent)
@@ -12,9 +13,21 @@ UInteractionManagerComponent::UInteractionManagerComponent(const FObjectInitiali
 {
 }
 
+void UInteractionManagerComponent::CallInteractInputActionActivate(const FGameplayTag InputTag, const FGameplayTag InteractOptionTag) const
+{
+	if (InteractionDescriptor)
+	{
+		UUserWidget* InteractionWidget = InteractionDescriptor->InteractionWidget.Get();
+		if (InteractionWidget && InteractionDescriptor->InteractionWidget->Implements<UInteractionWidgetInterface>())
+		{
+			IInteractionWidgetInterface::Execute_OnInteractInputActionActivate(InteractionWidget, InputTag, InteractOptionTag);
+		}
+	}
+}
+
 void UInteractionManagerComponent::ShowInteraction(UInteractionDescriptor* InInteractionDescriptor)
 {
-	InteractionDescriptor = MakeWeakObjectPtr(InInteractionDescriptor);
+	InteractionDescriptor = InInteractionDescriptor;
 	
 	if (OnShowInteraction.IsBound())
 	{
@@ -31,6 +44,18 @@ void UInteractionManagerComponent::HideInteraction()
 
 	InteractionDescriptor = nullptr;
 	OnHoldProgress.Clear();
+}
+
+void UInteractionManagerComponent::PushContentToInteractionPrompt(const TSubclassOf<UCommonActivatableWidget> WidgetClass) const
+{
+	if (InteractionDescriptor)
+	{
+		UUserWidget* InteractionWidget = InteractionDescriptor->InteractionWidget.Get();
+		if (InteractionWidget && InteractionDescriptor->InteractionWidget->Implements<UInteractionWidgetInterface>())
+		{
+			IInteractionWidgetInterface::Execute_PushContentToInteractionPrompt(InteractionWidget, WidgetClass);
+		}
+	}
 }
 
 void UInteractionManagerComponent::StartHoldInteract(const float HoldDuration)

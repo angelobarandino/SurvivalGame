@@ -6,6 +6,7 @@
 #include "InteractableTarget.h"
 #include "Components/InteractableScannerComponent.h"
 #include "SurvivalGame/AbilitySystem/Abilities/SGGameplayAbility.h"
+#include "SurvivalGame/UI/Interaction/InteractionManagerComponent.h"
 
 void UInteractionStatics::SetActorHighlightEnable(const AActor* Actor, const bool bEnable)
 {
@@ -114,4 +115,27 @@ TScriptInterface<IInteractableTarget> UInteractionStatics::GetActiveInteractable
 	}
 
 	return TScriptInterface<IInteractableTarget>();
+}
+
+
+void UInteractionStatics::CallInteractInputActionActivate(APlayerController* PlayerController, const FGameplayTag InputTag, const FGameplayTag InteractOptionTag)
+{
+	if (PlayerController)
+	{
+		if (const UInteractionManagerComponent* InteractionManager = PlayerController->FindComponentByClass<UInteractionManagerComponent>())
+		{
+			InteractionManager->CallInteractInputActionActivate(InputTag, InteractOptionTag);
+		}
+	}
+}
+
+void UInteractionStatics::PushContentToInteractionPrompt(APlayerController* PlayerController, const TSubclassOf<UCommonActivatableWidget> WidgetClass)
+{
+	if (PlayerController)
+	{
+		if (const UInteractionManagerComponent* InteractionManager = PlayerController->FindComponentByClass<UInteractionManagerComponent>())
+		{
+			InteractionManager->PushContentToInteractionPrompt(WidgetClass);
+		}
+	}
 }
