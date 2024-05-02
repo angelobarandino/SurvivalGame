@@ -14,6 +14,8 @@
 #include "UI/InventoryItemDragPreview.h"
 #include "UI/InventoryItemTooltip.h"
 
+#include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryItemSlotWidget)
+
 UInventoryItemSlotWidget::UInventoryItemSlotWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 }
@@ -46,9 +48,12 @@ void UInventoryItemSlotWidget::SetInventoryItemTooltip()
 
 		if (InventoryFragment != nullptr && !InventoryFragment->TooltipWidgetClass.IsNull())
 		{
-			TooltipWidgetSoftClass = InventoryFragment->TooltipWidgetClass;
+			TooltipWidgetClass = OverrideTooltipWidgetClass.IsNull()
+				? InventoryFragment->TooltipWidgetClass
+				: OverrideTooltipWidgetClass;
+			
 			StreamingHandle = UAssetManager::Get().GetStreamableManager().RequestAsyncLoad(
-				TooltipWidgetSoftClass.ToSoftObjectPath(),
+				TooltipWidgetClass.ToSoftObjectPath(),
 				FStreamableDelegate::CreateUObject(this, &ThisClass::OnTooltipWidgetLoaded),
 				FStreamableManager::AsyncLoadHighPriority
 			);
@@ -60,7 +65,7 @@ void UInventoryItemSlotWidget::OnTooltipWidgetLoaded()
 {
 	if (CurrentItemInstance.Get())
 	{
-		if (const TSubclassOf<UInventoryItemTooltip> UserWidgetClass = TooltipWidgetSoftClass.Get())
+		if (const TSubclassOf<UInventoryItemTooltip> UserWidgetClass = TooltipWidgetClass.Get())
 		{
 			if (UInventoryItemTooltip* TooltipWidget = Cast<UInventoryItemTooltip>(UWidgetBlueprintLibrary::Create(GetWorld(), UserWidgetClass, GetOwningPlayer())))
 			{
@@ -77,6 +82,8 @@ void UInventoryItemSlotWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
+	if (!bEnableDragAndDrop) return;
+
 	if (const APlayerController* PC = GetOwningPlayer())
 	{
 		InventoryManager = PC->FindComponentByClass<UInventoryManagerComponent>();
@@ -87,7 +94,7 @@ void UInventoryItemSlotWidget::NativeDestruct()
 {
 	InventoryManager = nullptr;
 	CurrentItemInstance = nullptr;
-	TooltipWidgetSoftClass = nullptr;
+	TooltipWidgetClass = nullptr;
 	
 	Super::NativeDestruct();
 }
@@ -131,8 +138,8 @@ void UInventoryItemSlotWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEv
 FReply UInventoryItemSlotWidget::NativeOnPreviewMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
 	Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
-
-	if (CurrentItemInstance.Get() && InventoryManager)
+	
+	if (CurrentItemInstance.Get() && InventoryManager && bEnableDragAndDrop)
 	{
 		if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
 		{
@@ -147,7 +154,7 @@ void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry,
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
 
-	if (CurrentItemInstance.Get() && InventoryManager)
+	if (CurrentItemInstance.Get() && InventoryManager && bEnableDragAndDrop)
 	{
 		if (UUserWidget* PreviewWidget = CreateDragPreview())
 		{

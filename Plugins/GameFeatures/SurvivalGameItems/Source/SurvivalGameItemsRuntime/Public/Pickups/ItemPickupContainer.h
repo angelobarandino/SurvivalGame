@@ -1,52 +1,35 @@
-﻿#pragma once
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
 
 #include "CoreMinimal.h"
-#include "Net/Serialization/FastArraySerializer.h"
+#include "IPickupable.h"
+#include "PickupItemCollection.h"
+#include "SurvivalGame/Interactions/InteractableActor.h"
 #include "ItemPickupContainer.generated.h"
 
-class UItemDefinition;
-
-USTRUCT(BlueprintType)
-struct FPickupItemEntry : public FFastArraySerializerItem
-{
-	GENERATED_BODY()
-	
-	FPickupItemEntry() : InstanceId(FGuid::NewGuid()) {}
-	FPickupItemEntry(const TSubclassOf<UItemDefinition> NewItemDef, const int32 NewItemStack = 1)
-		: InstanceId(FGuid::NewGuid())
-		, ItemDef(NewItemDef)
-		, ItemStack(NewItemStack)
-	{}
-
-	UPROPERTY(BlueprintReadOnly)
-	FGuid InstanceId;
-	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-	TSubclassOf<UItemDefinition> ItemDef = nullptr;
-	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-	int32 ItemStack = 1;
-};
-
-USTRUCT(BlueprintType)
-struct FPickupItemContainer : public FFastArraySerializer
+UCLASS()
+class SURVIVALGAMEITEMSRUNTIME_API AItemPickupContainer : public AInteractableActor, public IPickupable
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-	TArray<FPickupItemEntry>	Items;
+public:
+	AItemPickupContainer(const FObjectInitializer& ObjectInitializer);
+	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	
+	// ~Start IPickupable
+	virtual TArray<FPickupItemEntry> GetPickupItems() const override;
+	virtual bool OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator) override;
+	// ~End IPickupable
 
-	bool NetDeltaSerialize(FNetDeltaSerializeInfo & DeltaParms)
-	{
-		return FFastArraySerializer::FastArrayDeltaSerialize<FPickupItemEntry, FPickupItemContainer>(Items, DeltaParms, *this);
-	}
+	UFUNCTION(BlueprintCallable)
+	void SetPickupItems(const TArray<FPickupItemEntry> Items);
 
-	void AddItems(const TArray<FPickupItemEntry>& NewItems);
-	void UpdateItemCount(FGuid EntryId, const int32 NewItemStack);
-};
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
+	bool bDestroyOnPickup = true;
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = "Item Pickup", meta = (ExposeOnSpawn))
+	FPickupItemCollection Pickups;
 
-template<>
-struct TStructOpsTypeTraits<FPickupItemContainer> : public TStructOpsTypeTraitsBase2<FPickupItemContainer>
-{
-	enum { WithNetDeltaSerializer = true, };
 };

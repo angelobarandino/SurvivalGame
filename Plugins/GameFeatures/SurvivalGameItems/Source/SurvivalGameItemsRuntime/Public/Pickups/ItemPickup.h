@@ -4,13 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "IPickupable.h"
-#include "ItemPickupContainer.h"
+#include "PickupItemCollection.h"
 #include "GameFramework/Actor.h"
 #include "SurvivalGame/Interactions/InteractableActor.h"
 #include "ItemPickup.generated.h"
 
 class UItemData;
-struct FPickupItemContainer;
 
 
 UCLASS()
@@ -36,8 +35,8 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
 	bool bDestroyOnPickup = true;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Pickups, Category = "Item Pickup", meta = (ExposeOnSpawn))
-	FPickupItemContainer Pickups;
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, ReplicatedUsing=OnRep_Pickups, Category = "Item Pickup", meta = (ExposeOnSpawn))
+	FPickupItemCollection Pickups;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")

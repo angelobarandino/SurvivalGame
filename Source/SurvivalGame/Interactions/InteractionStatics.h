@@ -33,8 +33,5 @@ public:
 	static AActor* GetActorFromInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableTarget);
 
 	UFUNCTION(BlueprintCallable, Category = "Interaction Statics")
-	static void CallInteractInputActionActivate(APlayerController* PlayerController, const FGameplayTag InputTag, const FGameplayTag InteractOptionTag);
-
-	UFUNCTION(BlueprintCallable, Category = "Interaction Statics")
-	static void PushContentToInteractionPrompt(APlayerController* PlayerController, TSubclassOf<UCommonActivatableWidget> WidgetClass);
+	static void PushContentToInteractionPrompt(APlayerController* PlayerController, TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData);
 };

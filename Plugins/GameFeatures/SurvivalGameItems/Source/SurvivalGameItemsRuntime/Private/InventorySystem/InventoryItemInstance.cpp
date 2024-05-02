@@ -18,3 +18,11 @@ const UItemFragment* UInventoryItemInstance::FindFragmentByClass(const TSubclass
 {
 	return UItemDefinitionLibrary::FindItemDefinitionFragment(ItemDef, FragmentClass);
 }
+
+UInventoryItemInstance* UInventoryItemInstanceStatics::MakeInventoryItemInstance(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
+{
+	UInventoryItemInstance* ItemInstance = NewObject<UInventoryItemInstance>();
+	ItemInstance->ItemDef = ItemDef;
+	ItemInstance->ItemCount = ItemCount;
+	return ItemInstance;
+}

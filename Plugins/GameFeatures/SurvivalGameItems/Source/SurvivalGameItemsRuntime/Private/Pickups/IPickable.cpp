@@ -4,7 +4,7 @@
 #include "InventorySystem/InventoryTypes.h"
 #include "Pickups/IPickupable.h"
 #include "Pickups/ItemPickup.h"
-#include "Pickups/ItemPickupContainer.h"
+#include "Pickups/PickupItemCollection.h"
 
 
 TScriptInterface<IPickupable> UPickupableStatics::GetPickupableFromActor(AActor* Actor)

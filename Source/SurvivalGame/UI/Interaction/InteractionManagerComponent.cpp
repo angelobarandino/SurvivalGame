@@ -13,18 +13,6 @@ UInteractionManagerComponent::UInteractionManagerComponent(const FObjectInitiali
 {
 }
 
-void UInteractionManagerComponent::CallInteractInputActionActivate(const FGameplayTag InputTag, const FGameplayTag InteractOptionTag) const
-{
-	if (InteractionDescriptor)
-	{
-		UUserWidget* InteractionWidget = InteractionDescriptor->InteractionWidget.Get();
-		if (InteractionWidget && InteractionDescriptor->InteractionWidget->Implements<UInteractionWidgetInterface>())
-		{
-			IInteractionWidgetInterface::Execute_OnInteractInputActionActivate(InteractionWidget, InputTag, InteractOptionTag);
-		}
-	}
-}
-
 void UInteractionManagerComponent::ShowInteraction(UInteractionDescriptor* InInteractionDescriptor)
 {
 	InteractionDescriptor = InInteractionDescriptor;
@@ -46,14 +34,17 @@ void UInteractionManagerComponent::HideInteraction()
 	OnHoldProgress.Clear();
 }
 
-void UInteractionManagerComponent::PushContentToInteractionPrompt(const TSubclassOf<UCommonActivatableWidget> WidgetClass) const
+void UInteractionManagerComponent::PushContentToInteractionPrompt(const TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData) const
 {
 	if (InteractionDescriptor)
 	{
 		UUserWidget* InteractionWidget = InteractionDescriptor->InteractionWidget.Get();
 		if (InteractionWidget && InteractionDescriptor->InteractionWidget->Implements<UInteractionWidgetInterface>())
 		{
-			IInteractionWidgetInterface::Execute_PushContentToInteractionPrompt(InteractionWidget, WidgetClass);
+			if (IInteractionWidgetInterface* InteractionWidgetInterface = Cast<IInteractionWidgetInterface>(InteractionDescriptor->InteractionWidget))
+			{
+				InteractionWidgetInterface->PushContentToInteractionPrompt(WidgetClass, ContentData);
+			}
 		}
 	}
 }

@@ -19,10 +19,9 @@ class SURVIVALGAME_API UInteractionManagerComponent : public UControllerComponen
 public:
 	UInteractionManagerComponent(const FObjectInitializer& ObjectInitializer);
 
-	void CallInteractInputActionActivate(const FGameplayTag InputTag, const FGameplayTag InteractOptionTag) const;
 	void ShowInteraction(UInteractionDescriptor* InInteractionDescriptor);
 	void HideInteraction();
-	void PushContentToInteractionPrompt(const TSubclassOf<UCommonActivatableWidget> WidgetClass) const;
+	void PushContentToInteractionPrompt(const TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData) const;
 
 	DECLARE_DELEGATE_OneParam(FInteractionEvent, UInteractionDescriptor*);
 	FInteractionEvent OnShowInteraction;

@@ -9,7 +9,7 @@
 #include "ItemFragment_Interaction.h"
 #include "InventorySystem/InventoryTypes.h"
 #include "Net/UnrealNetwork.h"
-#include "Pickups/ItemPickupContainer.h"
+#include "Pickups/PickupItemCollection.h"
 
 AItemPickup::AItemPickup(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {

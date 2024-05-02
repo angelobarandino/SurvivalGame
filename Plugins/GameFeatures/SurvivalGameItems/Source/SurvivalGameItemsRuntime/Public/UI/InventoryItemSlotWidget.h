@@ -13,8 +13,6 @@ class UInventoryItemTooltip;
 class UInventoryManagerComponent;
 class UInventoryItemDragPreview;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryItemHoverChange, const UInventoryItemInstance*, ItemInstance);
-
 UCLASS()
 class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemSlotWidget : public UUserWidget
 {
@@ -35,14 +33,14 @@ public:
 		SlotIndex = InSlotIndex;
 	}
 	
-	UPROPERTY(BlueprintAssignable)
-	FInventoryItemHoverChange OnItemHoverActive;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bEnableDragAndDrop = true;
 
-	UPROPERTY(BlueprintAssignable)
-	FInventoryItemHoverChange OnItemHoverEnded;
-
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSoftClassPtr<UInventoryItemTooltip> OverrideTooltipWidgetClass;
+	
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetInventorySlotItem(TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
 	
 	UFUNCTION(BlueprintImplementableEvent)
@@ -73,11 +71,15 @@ protected:
 	// ~End UUserWidget
 
 private:
-	TSoftClassPtr<UInventoryItemTooltip> TooltipWidgetSoftClass;
+	TSoftClassPtr<UInventoryItemTooltip> TooltipWidgetClass;
 	TSharedPtr<FStreamableHandle> StreamingHandle;
 
 	UPROPERTY()
 	int32 SlotIndex = -1;
+
+	UPROPERTY()
+	bool bHasItem = false;
+
 	UFUNCTION()
 	UUserWidget* CreateDragPreview();
 };

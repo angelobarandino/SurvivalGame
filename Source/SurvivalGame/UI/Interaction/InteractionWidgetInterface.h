@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayTagContainer.h"
 #include "UObject/Interface.h"
 #include "InteractionWidgetInterface.generated.h"
 
@@ -29,8 +28,7 @@ public:
 	void UnbindInteraction(UInteractionDescriptor* Interaction);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void OnInteractInputActionActivate(const FGameplayTag InteractInputTag, const FGameplayTag InteractOptionTag);
+	void OnSetContentData(const UObject* ContentData);
 
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void PushContentToInteractionPrompt(TSubclassOf<UCommonActivatableWidget> WidgetClass);
+	virtual void PushContentToInteractionPrompt(TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData) = 0;
 };

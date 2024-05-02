@@ -117,25 +117,13 @@ TScriptInterface<IInteractableTarget> UInteractionStatics::GetActiveInteractable
 	return TScriptInterface<IInteractableTarget>();
 }
 
-
-void UInteractionStatics::CallInteractInputActionActivate(APlayerController* PlayerController, const FGameplayTag InputTag, const FGameplayTag InteractOptionTag)
+void UInteractionStatics::PushContentToInteractionPrompt(APlayerController* PlayerController, const TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData)
 {
 	if (PlayerController)
 	{
 		if (const UInteractionManagerComponent* InteractionManager = PlayerController->FindComponentByClass<UInteractionManagerComponent>())
 		{
-			InteractionManager->CallInteractInputActionActivate(InputTag, InteractOptionTag);
-		}
-	}
-}
-
-void UInteractionStatics::PushContentToInteractionPrompt(APlayerController* PlayerController, const TSubclassOf<UCommonActivatableWidget> WidgetClass)
-{
-	if (PlayerController)
-	{
-		if (const UInteractionManagerComponent* InteractionManager = PlayerController->FindComponentByClass<UInteractionManagerComponent>())
-		{
-			InteractionManager->PushContentToInteractionPrompt(WidgetClass);
+			InteractionManager->PushContentToInteractionPrompt(WidgetClass, ContentData);
 		}
 	}
 }

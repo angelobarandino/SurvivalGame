@@ -35,6 +35,7 @@ public:
 private:
 	friend struct FInventoryItemList;
 	friend class UInventoryManagerComponent;
+	friend class UInventoryItemInstanceStatics;
 	
 	UPROPERTY(Replicated)
 	TSubclassOf<UItemDefinition> ItemDef;
@@ -45,4 +46,15 @@ private:
 	UPROPERTY(Replicated)
 	int32 ItemSlot;
 	
+};
+
+
+UCLASS()
+class UInventoryItemInstanceStatics : public UBlueprintFunctionLibrary	
+{
+	GENERATED_BODY()
+
+public:
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory Item")
+	static UInventoryItemInstance* MakeInventoryItemInstance(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
 };

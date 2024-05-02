@@ -1,34 +1,53 @@
-﻿#include "Pickups/ItemPickupContainer.h"
+// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ItemDefinition.h"
 
-void FPickupItemContainer::AddItems(const TArray<FPickupItemEntry>& NewItems)
+#include "Pickups/ItemPickupContainer.h"
+
+#include "InventorySystem/InventoryTypes.h"
+#include "Net/UnrealNetwork.h"
+
+
+AItemPickupContainer::AItemPickupContainer(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
-	for (const FPickupItemEntry& Item : NewItems)
-	{
-		if (Item.ItemDef != nullptr && Item.ItemStack > 0)
-		{
-			FPickupItemEntry& NewItem = Items.AddDefaulted_GetRef();
-			NewItem.ItemStack = Item.ItemStack;
-			NewItem.ItemDef = Item.ItemDef;
-			MarkItemDirty(NewItem);
-		}
-	}
+	PrimaryActorTick.bCanEverTick = false;
+	
+	bReplicates = true;
+	NetUpdateFrequency = 5.f;
+	NetDormancy = DORM_Initial;
 }
 
-void FPickupItemContainer::UpdateItemCount(const FGuid EntryId, const int32 NewItemStack)
+void AItemPickupContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	for (auto PickupIt = Items.CreateIterator(); PickupIt; ++PickupIt)
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ThisClass, Pickups);
+}
+
+TArray<FPickupItemEntry> AItemPickupContainer::GetPickupItems() const
+{
+	return Pickups.Items;
+}
+
+bool AItemPickupContainer::OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator)
+{
+	for (const auto& Result : PickupResultMap)
 	{
-		FPickupItemEntry& PickupInstance = *PickupIt;
-		if (EntryId == PickupInstance.InstanceId)
-		{
-			PickupInstance.ItemStack = NewItemStack;
-			if (PickupInstance.ItemStack == 0)
-			{
-				PickupIt.RemoveCurrent();
-				MarkArrayDirty();
-			}
-		}
+		Pickups.UpdateItemCount(Result.Key, Result.Value.RemainingStack);
 	}
+	
+	FlushNetDormancy();
+
+	const bool bCanBeDestroyed = Pickups.Items.Num() == 0 && bDestroyOnPickup;
+
+	if (bCanBeDestroyed)
+	{
+		Destroy(true, true);
+	}
+
+	return bCanBeDestroyed;
+}
+
+void AItemPickupContainer::SetPickupItems(const TArray<FPickupItemEntry> Items)
+{
+	Pickups.AddItems(Items);
 }
