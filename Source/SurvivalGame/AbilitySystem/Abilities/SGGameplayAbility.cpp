@@ -19,11 +19,23 @@ APlayerController* USGGameplayAbility::GetPlayerControllerFromActorInfo() const
 	return nullptr;
 }
 
+APawn* USGGameplayAbility::GetPawnFromAvatarInfo() const
+{
+	return Cast<APawn>(GetAvatarActorFromActorInfo());
+}
+
 void USGGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
 	Super::OnGiveAbility(ActorInfo, Spec);
 
-	if (bActivateAbilityOnGranted && ActorInfo && !Spec.IsActive())
+	TryActivateAbilityOnGranted(ActorInfo, Spec);
+}
+
+void USGGameplayAbility::TryActivateAbilityOnGranted(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) const
+{
+	const bool bIsPredicting = Spec.ActivationInfo.ActivationMode == EGameplayAbilityActivationMode::Predicting;
+	
+	if (ActorInfo && !Spec.IsActive() && !bIsPredicting && bActivateAbilityOnGranted)
 	{
 		if (UAbilitySystemComponent* ASC = ActorInfo->AbilitySystemComponent.Get())
 		{

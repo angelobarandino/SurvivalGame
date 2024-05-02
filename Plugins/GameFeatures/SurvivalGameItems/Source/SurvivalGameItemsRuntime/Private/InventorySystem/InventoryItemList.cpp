@@ -51,11 +51,13 @@ void FInventoryItemList::BroadcastItemsChangeMessage(const FInventoryItemEntry& 
 	FInventoryChangeMessage Message;
 	Message.ItemCount = Entry.ItemCount;
 	Message.ItemInstance = Entry.ItemInstance;
+	Message.ItemDef = Entry.ItemInstance->ItemDef;
 	Message.OldItemSlot = Entry.LastObserveItemSlot;
-
+	Message.OwnerActor = OwnerInventory->GetOwner();
+	
 	const int32 OldItemCount = Entry.LastObserveItemCount;
 	const int32 OldItemSlot = Entry.LastObserveItemSlot;
-
+	
 	if (OldItemCount != NewItemCount)
 	{
 		if (OldItemCount == 0 && NewItemCount > 0)
@@ -75,7 +77,7 @@ void FInventoryItemList::BroadcastItemsChangeMessage(const FInventoryItemEntry& 
 	{
 		Message.ChangeAction = EInventoryChangeAction::ItemMovedToSlot;
 	}
-
+	
 	UGameplayMessageSubsystem& MessageSystem = UGameplayMessageSubsystem::Get(OwnerInventory->GetWorld());
 	MessageSystem.BroadcastMessage(TAG_SurvivalGame_Inventory_Message_StackChange, Message);
 }
@@ -291,19 +293,22 @@ void FInventoryItemList::MoveItemToSlot(FInventoryItemEntry& Entry, const int32 
 
 bool FInventoryItemList::RemoveItemEntry(const UInventoryItemInstance* ItemInstance)
 {
-	for (auto EntryIt = Items.CreateIterator(); EntryIt; ++EntryIt)
+	if (ItemInstance != nullptr)
 	{
-		const FInventoryItemEntry& Entry = *EntryIt;
-		if (Entry.ItemInstance == ItemInstance)
+		for (auto EntryIt = Items.CreateIterator(); EntryIt; ++EntryIt)
 		{
-			if (OwnerInventory->GetOwner()->HasAuthority())
+			const FInventoryItemEntry& Entry = *EntryIt;
+			if (Entry.ItemInstance == ItemInstance)
 			{
-				BroadcastItemsChangeMessage(Entry, 0, 0);
-			}
+				if (OwnerInventory->GetOwner()->HasAuthority())
+				{
+					BroadcastItemsChangeMessage(Entry, 0, 0);
+				}
 			
-			EntryIt.RemoveCurrent();
-			MarkArrayDirty();
-			return true;
+				EntryIt.RemoveCurrent();
+				MarkArrayDirty();
+				return true;
+			}
 		}
 	}
 

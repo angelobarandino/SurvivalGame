@@ -17,6 +17,8 @@ void USGAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AActo
 	{
 		if (USGGameplayAbility* Ability = Cast<USGGameplayAbility>(AbilitySpec.Ability))
 		{
+			Ability->TryActivateAbilityOnGranted(AbilityActorInfo.Get(), AbilitySpec);
+			
 			if (Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced)
 			{
 				TArray<UGameplayAbility*> AbilitySpecsInstances = AbilitySpec.GetAbilityInstances();

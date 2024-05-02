@@ -11,8 +11,6 @@
 
 class UItemDefinition;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnFocusedInventoryItemChange, const UInventoryItemInstance*, ItemInstance);
-
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class SURVIVALGAMEITEMSRUNTIME_API UInventoryManagerComponent : public UActorComponent
 {
@@ -37,49 +35,44 @@ public:
 	UFUNCTION(Blueprintable, Category = "Inventory")
 	bool MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot);
 
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	bool RemoveInventoryItem(const UInventoryItemInstance* ItemInstance);
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void DropInventoryItem(const FDropInventoryItemTemplate& DropItemTemplate);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	UInventoryItemInstance* FindItemInstanceInSlot(const int32 Slot);
 
-	UPROPERTY(BlueprintAssignable, Category = "Inventory")
-	FOnFocusedInventoryItemChange OnFocusedInventoryItemChange;
-	
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void SetFocusedInventoryItemSlot(const int32 FocusedSlot)
+	{
+		Server_SetFocusedInventoryItemSlot(FocusedSlot);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
+	UInventoryItemInstance* GetFocusedInventoryItem()
+	{
+		return FindItemInstanceInSlot(FocusedInventoryItemSlot);
+	}
+
 public:
 	void GetItemDefInventoryStack(TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const;
 
-	void SetFocusedItem(const UInventoryItemInstance* ItemInstance) const
-	{
-		OnFocusedInventoryItemChange.Broadcast(ItemInstance);
-	}
-	
 private:
 
-	UPROPERTY(Replicated, ReplicatedUsing=OnRep_InventoryItems)
+	UPROPERTY(Replicated)
 	FInventoryItemList InventoryList;
 	
-	UPROPERTY(Replicated, ReplicatedUsing=OnRep_MaxInventorySize)
+	UPROPERTY(Replicated)
 	int32 MaxInventorySize;
-
-	UFUNCTION()
-	void OnRep_InventoryItems();
 	
-	UFUNCTION()
-	void OnRep_MaxInventorySize();
+	UPROPERTY(Replicated)
+	int32 FocusedInventoryItemSlot = -1;
 
 	void ReplicateNewItemInstance(UInventoryItemInstance* NewItemInstance);
-	
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetFocusedInventoryItemSlot(const int32 FocusedSlot);
+
 	UFUNCTION(Server, Reliable, WithValidation)
 	void Server_MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot);
 	
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_RemoveInventoryItem(const UInventoryItemInstance* ItemInstance);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_DropInventoryItem(const FDropInventoryItemTemplate& DropItemTemplate);
-
 };

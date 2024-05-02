@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
 	float InteractDuration;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction", meta=(Categories="Ability.Interaction"))
 	FGameplayTag InteractActiveGrantedTag;
 
 protected:

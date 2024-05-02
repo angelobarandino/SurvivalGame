@@ -4,11 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "IPickupable.h"
+#include "ItemPickupContainer.h"
 #include "GameFramework/Actor.h"
 #include "SurvivalGame/Interactions/InteractableActor.h"
 #include "ItemPickup.generated.h"
 
 class UItemData;
+struct FPickupItemContainer;
+
 
 UCLASS()
 class SURVIVALGAMEITEMSRUNTIME_API AItemPickup : public AInteractableActor, public IPickupable
@@ -21,31 +24,28 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	virtual void OnConstruction(const FTransform& Transform) override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Pickup, Category = "Item Pickup", meta = (ExposeOnSpawn))
-	FPickupInstance Pickup;
 	
+	// ~Start IPickupable
+	virtual TArray<FPickupItemEntry> GetPickupItems() const override;
+	virtual bool OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator) override;
+	// ~End IPickupable
+
+	UFUNCTION(BlueprintCallable)
+	void SetPickupItems(const TArray<FPickupItemEntry> Items);
+
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
 	bool bDestroyOnPickup = true;
 	
-	// ~Start IPickupable
-	virtual FInventoryPickup GetPickupInventory() const override;
-	virtual void OnPickupAddedToInventory(const FPickupInstance& PickupInstance, const FAddInventoryItemResult& AddItemResult) override;
-	// ~End IPickupable
-
-	void SetPickupItems(const FPickupInstance& InPickup);
-
-	UFUNCTION(Server, Reliable)
-	void Server_Destroy();
-
-	UFUNCTION(NetMulticast, Reliable)
-	void Multicast_OnPickup(const FPickupInstance& PickupInstance, const FAddInventoryItemResult& AddItemResult);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, ReplicatedUsing=OnRep_Pickups, Category = "Item Pickup", meta = (ExposeOnSpawn))
+	FPickupItemContainer Pickups;
 	
+protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<UStaticMeshComponent> ItemPickupMesh;
 
-protected:
 	UFUNCTION()
-	void OnRep_Pickup();
+	void OnRep_Pickups();
 
+private:
+	void SetPickupObjectMesh();
 };

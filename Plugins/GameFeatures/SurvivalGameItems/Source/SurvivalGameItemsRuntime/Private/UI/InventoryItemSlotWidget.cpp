@@ -5,14 +5,12 @@
 
 #include "ItemDefinitionLibrary.h"
 #include "ItemFragment_Inventory.h"
-#include "SurvivalGameItems.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/PanelWidget.h"
 #include "Engine/AssetManager.h"
 #include "InventorySystem/InventoryItemDragDropOperation.h"
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventorySystem/InventoryManagerComponent.h"
-#include "UI/InventoryGrid.h"
 #include "UI/InventoryItemDragPreview.h"
 #include "UI/InventoryItemTooltip.h"
 
@@ -112,7 +110,7 @@ void UInventoryItemSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, c
 
 		if (InventoryManager)
 		{
-			InventoryManager->SetFocusedItem(CurrentItemInstance);
+			InventoryManager->SetFocusedInventoryItemSlot(CurrentItemInstance->GetItemSlot());
 		}
 	}
 }
@@ -125,7 +123,7 @@ void UInventoryItemSlotWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEv
 		
 		if (InventoryManager)
 		{
-			InventoryManager->SetFocusedItem(nullptr);
+			InventoryManager->SetFocusedInventoryItemSlot(-1);
 		}
 	}
 }
@@ -181,7 +179,7 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 
 		if (InventoryManager)
 		{
-			InventoryManager->SetFocusedItem(Operation->DraggedItemInstance.Get());
+			InventoryManager->SetFocusedInventoryItemSlot(SlotIndex);
 		}
 		
 		return true;

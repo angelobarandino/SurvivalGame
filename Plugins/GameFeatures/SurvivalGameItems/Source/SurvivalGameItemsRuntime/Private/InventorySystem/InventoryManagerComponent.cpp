@@ -28,6 +28,7 @@ void UInventoryManagerComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 
 	DOREPLIFETIME(ThisClass, InventoryList);
 	DOREPLIFETIME(ThisClass, MaxInventorySize);
+	DOREPLIFETIME(ThisClass, FocusedInventoryItemSlot);
 }
 
 bool UInventoryManagerComponent::ReplicateSubobjects(UActorChannel* Channel, FOutBunch* Bunch, FReplicationFlags* RepFlags)
@@ -76,7 +77,7 @@ TArray<UInventoryItemInstance*> UInventoryManagerComponent::GetItems() const
 
 FAddInventoryItemResult UInventoryManagerComponent::AddInventorItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
 {
-	check(ItemDef);
+	check(ItemDef && ItemCount > 0);
 
 	int32 RemainingItemCount = ItemCount;
 	while (RemainingItemCount > 0)
@@ -111,16 +112,7 @@ bool UInventoryManagerComponent::MoveInventorItem(const int32 CurrentSlot, const
 
 bool UInventoryManagerComponent::RemoveInventoryItem(const UInventoryItemInstance* ItemInstance)
 {
-	Server_RemoveInventoryItem(ItemInstance);
-	return true;
-}
-
-void UInventoryManagerComponent::DropInventoryItem(const FDropInventoryItemTemplate& DropItemTemplate)
-{
-	if (DropItemTemplate.ItemInstance.IsValid())
-	{
-		Server_DropInventoryItem(DropItemTemplate);
-	}
+	return InventoryList.RemoveItemEntry(ItemInstance);
 }
 
 UInventoryItemInstance* UInventoryManagerComponent::FindItemInstanceInSlot(const int32 Slot)
@@ -143,16 +135,6 @@ void UInventoryManagerComponent::GetItemDefInventoryStack(const TSubclassOf<UIte
 	}
 }
 
-void UInventoryManagerComponent::OnRep_InventoryItems()
-{
-	
-}
-
-void UInventoryManagerComponent::OnRep_MaxInventorySize()
-{
-	
-}
-
 void UInventoryManagerComponent::ReplicateNewItemInstance(UInventoryItemInstance* NewItemInstance)
 {
 	if (NewItemInstance)
@@ -162,6 +144,11 @@ void UInventoryManagerComponent::ReplicateNewItemInstance(UInventoryItemInstance
 			AddReplicatedSubObject(NewItemInstance);
 		}
 	}
+}
+
+void UInventoryManagerComponent::Server_SetFocusedInventoryItemSlot_Implementation(const int32 FocusedSlot)
+{
+	FocusedInventoryItemSlot = FocusedSlot;
 }
 
 void UInventoryManagerComponent::Server_MoveInventorItem_Implementation(const int32 CurrentSlot, const int32 NewSlot)
@@ -195,49 +182,5 @@ void UInventoryManagerComponent::Server_MoveInventorItem_Implementation(const in
 
 bool UInventoryManagerComponent::Server_MoveInventorItem_Validate(const int32 CurrentSlot, const int32 NewSlot)
 {
-	return true;
-}
-
-void UInventoryManagerComponent::Server_RemoveInventoryItem_Implementation(const UInventoryItemInstance* ItemInstance)
-{
-	if (ItemInstance)
-	{
-		InventoryList.RemoveItemEntry(ItemInstance);
-	}
-}
-
-bool UInventoryManagerComponent::Server_RemoveInventoryItem_Validate(const UInventoryItemInstance* ItemInstance)
-{
-	return ItemInstance != nullptr;
-}
-
-void UInventoryManagerComponent::Server_DropInventoryItem_Implementation( const FDropInventoryItemTemplate& DropItemTemplate)
-{
-	if (!DropItemTemplate.ItemInstance.IsValid() || !DropItemTemplate.PlayerController.IsValid())
-	{
-		return;
-	}
-
-	if (APawn* Pawn = DropItemTemplate.PlayerController->GetPawn())
-	{
-		const UInventoryItemInstance* ItemInstance = DropItemTemplate.ItemInstance.Get();
-		
-		AItemPickup* ItemPickup = Pawn->GetWorld()->SpawnActorDeferred<AItemPickup>(AItemPickup::StaticClass(),
-			DropItemTemplate.DropLocation, nullptr, Pawn,
-			ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn
-		);
-
-		ItemPickup->ItemPickupMesh->SetSimulatePhysics(true);
-		ItemPickup->Pickup = FPickupInstance(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
-		
-		if (RemoveInventoryItem(ItemInstance))
-		{
-			ItemPickup->FinishSpawning(DropItemTemplate.DropLocation);
-		}
-	}
-}
-
-bool UInventoryManagerComponent::Server_DropInventoryItem_Validate(const FDropInventoryItemTemplate& DropItemTemplate)
-{
-	return DropItemTemplate.ItemInstance.IsValid() && DropItemTemplate.PlayerController.Get();
+	return CurrentSlot != NewSlot;
 }

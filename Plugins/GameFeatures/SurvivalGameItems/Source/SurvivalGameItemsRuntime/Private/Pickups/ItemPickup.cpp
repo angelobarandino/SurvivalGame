@@ -7,7 +7,9 @@
 #include "ItemDefinitionLibrary.h"
 #include "ItemFragment_Assets.h"
 #include "ItemFragment_Interaction.h"
+#include "InventorySystem/InventoryTypes.h"
 #include "Net/UnrealNetwork.h"
+#include "Pickups/ItemPickupContainer.h"
 
 AItemPickup::AItemPickup(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -16,6 +18,8 @@ AItemPickup::AItemPickup(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	SetRootComponent(ItemPickupMesh);
 
 	bReplicates = true;
+	NetUpdateFrequency = 5.f;
+	NetDormancy = DORM_Initial;
 	SetReplicatingMovement(true);
 }
 
@@ -23,72 +27,63 @@ void AItemPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ThisClass, Pickup);
+	DOREPLIFETIME(ThisClass, Pickups);
 }
 
 void AItemPickup::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
-	
-	if (Pickup.ItemDef == nullptr || Pickup.ItemStack == 0)
-	{
-		return;
-	}
 
-	if (const UItemFragment_Assets* AssetFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<UItemFragment_Assets>(Pickup.ItemDef))
-	{
-		ItemPickupMesh->SetStaticMesh(AssetFragment->Mesh.LoadSynchronous());
-	}
-	
-	if (const UItemFragment_Interaction* InteractionFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<UItemFragment_Interaction>(Pickup.ItemDef))
-	{
-		InteractableObjectName = InteractionFragment->DisplayName;
-		InteractOptions = InteractionFragment->InteractOptions;
-		InteractWidgetClass = InteractionFragment->InteractWidgetClass;
-	}
+	SetPickupObjectMesh();
 }
 
-FInventoryPickup AItemPickup::GetPickupInventory() const
+TArray<FPickupItemEntry> AItemPickup::GetPickupItems() const
 {
-	if (Pickup.ItemDef == nullptr)
-	{
-		return FInventoryPickup();
-	}
-	
-	FInventoryPickup InventoryPickup;
-	InventoryPickup.Instances.Add(Pickup);
-	return InventoryPickup;
+	return Pickups.Items;
 }
 
-void AItemPickup::OnPickupAddedToInventory(const FPickupInstance& PickupInstance, const FAddInventoryItemResult& AddItemResult)
+bool AItemPickup::OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator)
 {
-	Pickup.ItemStack = AddItemResult.RemainingStack;
+	for (const auto& Result : PickupResultMap)
+	{
+		Pickups.UpdateItemCount(Result.Key, Result.Value.RemainingStack);
+	}
 	
-	if (bDestroyOnPickup && Pickup.ItemStack == 0)
+	FlushNetDormancy();
+
+	const bool bCanBeDestroyed = Pickups.Items.Num() == 0 && bDestroyOnPickup;
+
+	if (bCanBeDestroyed)
 	{
 		Destroy(true, true);
 	}
+
+	return bCanBeDestroyed;
 }
 
-void AItemPickup::SetPickupItems(const FPickupInstance& InPickup)
+void AItemPickup::SetPickupItems(const TArray<FPickupItemEntry> Items)
 {
-	Pickup = InPickup;
+	Pickups.AddItems(Items);
 }
 
-void AItemPickup::Multicast_OnPickup_Implementation(const FPickupInstance& PickupInstance, const FAddInventoryItemResult& AddItemResult)
+void AItemPickup::OnRep_Pickups()
 {
-	
+	SetPickupObjectMesh();
 }
 
-void AItemPickup::OnRep_Pickup()
+void AItemPickup::SetPickupObjectMesh()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, TEXT("OnRep_Pickup"));
+	FPickupItemEntry Pickup;
+	if (Pickups.Items.Num() > 0)
+	{
+		Pickup = Pickups.Items[0];	
+	}
 	
 	if (Pickup.ItemDef == nullptr || Pickup.ItemStack == 0)
 	{
 		return;
 	}
-
+	
 	if (const UItemFragment_Assets* AssetFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<UItemFragment_Assets>(Pickup.ItemDef))
 	{
 		ItemPickupMesh->SetStaticMesh(AssetFragment->Mesh.LoadSynchronous());
@@ -100,9 +95,4 @@ void AItemPickup::OnRep_Pickup()
 		InteractOptions = InteractionFragment->InteractOptions;
 		InteractWidgetClass = InteractionFragment->InteractWidgetClass;
 	}
-}
-
-void AItemPickup::Server_Destroy_Implementation()
-{
-	
 }

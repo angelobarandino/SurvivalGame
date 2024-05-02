@@ -28,15 +28,21 @@ struct FInventoryChangeMessage
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
 	EInventoryChangeAction ChangeAction;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	TSubclassOf<UItemDefinition> ItemDef;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
-	TObjectPtr<UInventoryItemInstance> ItemInstance = nullptr;
+	TWeakObjectPtr<const UInventoryItemInstance> ItemInstance = nullptr;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
 	int32 ItemCount = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
 	int32 OldItemSlot = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	TWeakObjectPtr<const AActor> OwnerActor;
 };
 
 
