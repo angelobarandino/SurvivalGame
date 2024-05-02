@@ -54,15 +54,17 @@ public:
 	}
 
 public:
+	
+	void AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
+	
 	void GetItemDefInventoryStack(TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const;
 
+	UPROPERTY(Replicated)
+	int32 MaxInventorySize;
 private:
 
 	UPROPERTY(Replicated)
 	FInventoryItemList InventoryList;
-	
-	UPROPERTY(Replicated)
-	int32 MaxInventorySize;
 	
 	UPROPERTY(Replicated)
 	int32 FocusedInventoryItemSlot = -1;

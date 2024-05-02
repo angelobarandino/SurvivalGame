@@ -82,11 +82,22 @@ void UInventoryItemSlotWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (!bEnableDragAndDrop) return;
-
-	if (const APlayerController* PC = GetOwningPlayer())
+	if (OwningActor.IsValid())
 	{
-		InventoryManager = PC->FindComponentByClass<UInventoryManagerComponent>();
+		InventoryManager = OwningActor->FindComponentByClass<UInventoryManagerComponent>();
+
+		if (InventoryManager && SlotIndex >= 0)
+		{
+			CurrentItemInstance = InventoryManager->FindItemInstanceInSlot(SlotIndex);
+			if (CurrentItemInstance == nullptr)
+			{
+				EmptyInventorySlot();
+				return;
+			}
+			
+			SetInventorySlotItem(CurrentItemInstance->GetItemDef(), CurrentItemInstance->GetItemCount());
+			SetInventoryItemTooltip();
+		}
 	}
 }
 
@@ -188,7 +199,12 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 		{
 			InventoryManager->SetFocusedInventoryItemSlot(SlotIndex);
 		}
-		
+
+		if (OwningActor.Get())
+		{
+			OwningActor->ForceNetUpdate();
+		}
+
 		return true;
 	}
 	

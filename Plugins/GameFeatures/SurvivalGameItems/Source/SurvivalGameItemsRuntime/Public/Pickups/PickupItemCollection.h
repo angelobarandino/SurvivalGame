@@ -26,6 +26,9 @@ struct FPickupItemEntry : public FFastArraySerializerItem
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 	int32 ItemStack = 1;
+	
+	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
+	int32 Slot = -1;
 };
 
 USTRUCT(BlueprintType)

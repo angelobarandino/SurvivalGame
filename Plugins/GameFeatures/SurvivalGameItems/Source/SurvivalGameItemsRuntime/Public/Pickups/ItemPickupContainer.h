@@ -8,6 +8,8 @@
 #include "SurvivalGame/Interactions/InteractableActor.h"
 #include "ItemPickupContainer.generated.h"
 
+class UInventoryManagerComponent;
+
 UCLASS()
 class SURVIVALGAMEITEMSRUNTIME_API AItemPickupContainer : public AInteractableActor, public IPickupable
 {
@@ -18,6 +20,12 @@ public:
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
+	virtual void OnConstruction(const FTransform& Transform) override;
+
+protected:
+	virtual void BeginPlay() override;
+
+public:
 	// ~Start IPickupable
 	virtual TArray<FPickupItemEntry> GetPickupItems() const override;
 	virtual bool OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator) override;
@@ -26,10 +34,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetPickupItems(const TArray<FPickupItemEntry> Items);
 
+	
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
 	bool bDestroyOnPickup = true;
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = "Item Pickup", meta = (ExposeOnSpawn))
 	FPickupItemCollection Pickups;
 
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = "Inventory", meta = (ExposeOnSpawn))
+	int32 MaxInventorySize = 15;
+	
+protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<UInventoryManagerComponent> InventoryManager;
+	
 };

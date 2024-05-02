@@ -67,6 +67,7 @@ public:
 
 	bool RemoveItemEntry(const UInventoryItemInstance* ItemInstance);
 	void RemoveItemStack(const UInventoryItemInstance* ItemInstance, const int32 RemoveCount);
+	
 
 private:
 	friend UInventoryManagerComponent;

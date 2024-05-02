@@ -3,6 +3,7 @@
 
 #include "Pickups/ItemPickupContainer.h"
 
+#include "InventorySystem/InventoryManagerComponent.h"
 #include "InventorySystem/InventoryTypes.h"
 #include "Net/UnrealNetwork.h"
 
@@ -10,6 +11,8 @@
 AItemPickupContainer::AItemPickupContainer(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	InventoryManager = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryManagerComponent");
 	
 	bReplicates = true;
 	NetUpdateFrequency = 5.f;
@@ -21,6 +24,28 @@ void AItemPickupContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ThisClass, Pickups);
+}
+
+void AItemPickupContainer::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+}
+
+void AItemPickupContainer::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if (HasAuthority())
+	{
+		InventoryManager->MaxInventorySize = MaxInventorySize;
+
+		for (const FPickupItemEntry& PickupItem : Pickups.Items)
+		{
+			InventoryManager->AddInitialInventoryItem(PickupItem.ItemDef, PickupItem.ItemStack);
+		}
+		
+		ForceNetUpdate();
+	}
 }
 
 TArray<FPickupItemEntry> AItemPickupContainer::GetPickupItems() const

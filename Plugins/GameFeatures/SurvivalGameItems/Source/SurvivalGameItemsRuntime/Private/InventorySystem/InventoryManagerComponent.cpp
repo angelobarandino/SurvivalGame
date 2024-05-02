@@ -125,6 +125,15 @@ UInventoryItemInstance* UInventoryManagerComponent::FindItemInstanceInSlot(const
 	return nullptr;
 }
 
+void UInventoryManagerComponent::AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
+{
+	FAddItemResult Result = InventoryList.CreateNewItem(InventoryList.MakeAddOrNewItemRequest(ItemDef), ItemCount);
+	if (Result.bSuccess)
+	{
+		ReplicateNewItemInstance(Result.Instance.Get());
+	}
+}
+
 void UInventoryManagerComponent::GetItemDefInventoryStack(const TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const
 {
 	check(ItemDef);

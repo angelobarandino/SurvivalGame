@@ -21,6 +21,7 @@ class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemSlotWidget : public UUserWidget
 public:
 	UInventoryItemSlotWidget(const FObjectInitializer& ObjectInitializer);
 
+
 	UFUNCTION(BlueprintCallable)
 	void SetInventorySlotItemInstance(const UInventoryItemInstance* ItemInstance);
 	
@@ -32,12 +33,18 @@ public:
 	{
 		SlotIndex = InSlotIndex;
 	}
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	bool bEnableDragAndDrop = true;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftClassPtr<UInventoryItemTooltip> OverrideTooltipWidgetClass;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ExposeOnSpawn))
+	TWeakObjectPtr<AActor> OwningActor = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ExposeOnSpawn))
+	int32 SlotIndex = -1;
 	
 protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
@@ -74,11 +81,6 @@ private:
 	TSoftClassPtr<UInventoryItemTooltip> TooltipWidgetClass;
 	TSharedPtr<FStreamableHandle> StreamingHandle;
 
-	UPROPERTY()
-	int32 SlotIndex = -1;
-
-	UPROPERTY()
-	bool bHasItem = false;
 
 	UFUNCTION()
 	UUserWidget* CreateDragPreview();

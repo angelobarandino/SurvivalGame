@@ -44,6 +44,7 @@ void FInventoryItemList::PostReplicatedChange(const TArrayView<int32> ChangedInd
 	}
 }
 
+
 void FInventoryItemList::BroadcastItemsChangeMessage(const FInventoryItemEntry& Entry, const int32 NewItemCount, const int32 NewItemSlot) const
 {
 	check(Entry.ItemInstance);
@@ -93,6 +94,7 @@ void FInventoryItemList::MarkItemDirtyAndBroadcastChange(FInventoryItemEntry& En
 		Entry.LastObserveItemSlot = Entry.ItemInstance->ItemSlot;
 	}
 }
+
 
 FAddInventoryItemRequest FInventoryItemList::MakeAddItemRequestToSlot(const int32 Slot, const TSubclassOf<UItemDefinition>& ItemDef)
 {
