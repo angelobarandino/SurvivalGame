@@ -140,7 +140,7 @@ struct FAddItemResult
 	GENERATED_BODY()
 
 	UPROPERTY()
-	bool bSuccess = true;
+	bool bSuccess = false;
 	
 	UPROPERTY()
 	int32 ItemsAdded = 0;

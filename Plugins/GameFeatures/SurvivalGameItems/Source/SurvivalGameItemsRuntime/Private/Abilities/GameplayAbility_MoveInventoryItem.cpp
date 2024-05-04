@@ -5,6 +5,7 @@
 
 #include "InventorySystem/InventoryManagerComponent.h"
 #include "Pickups/IPickupable.h"
+#include "Pickups/ItemPickupContainer.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(GameplayAbility_MoveInventoryItem)
 
@@ -20,13 +21,13 @@ void UGameplayAbility_MoveInventoryItem::ActivateAbility(const FGameplayAbilityS
 
 	if (HasAuthority(&CurrentActivationInfo))
 	{
-		MoveInventoryItem(TriggerEventData->Target, TriggerEventData->OptionalObject);
+		MoveInventoryItem(TriggerEventData->Instigator, TriggerEventData->OptionalObject);
 	}
 }
 
-void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* TargetActor, const UObject* MoveItemObject)
+void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* PlayerActor, const UObject* MoveItemObject)
 {
-	if (TargetActor == nullptr || MoveItemObject == nullptr)
+	if (MoveItemObject == nullptr || PlayerActor == nullptr)
 	{
 		EndAbility(GetCurrentAbilitySpecHandle(), CurrentActorInfo, CurrentActivationInfo, true, false);
 		return;
@@ -34,15 +35,52 @@ void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* TargetA
 
 	if (const UMoveInventoryItemPayload* Data = Cast<UMoveInventoryItemPayload>(MoveItemObject))
 	{
-		if (AItemPickupContainer* SourceActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->SourceActorNetGUID))
+ 		// If not Player, and Source and Target guids are valid, then were are moving items on a none player inventory
+		if (!Data->bPlayerInventory && Data->SourceActorNetGUID.IsValid() && Data->TargetActorNetGUID.IsValid())
 		{
-			UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>();
-			UInventoryManagerComponent* TargetInventory = TargetActor->FindComponentByClass<UInventoryManagerComponent>();
-			check(SourceInventory && TargetInventory);
+			if (AActor* SourceActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->SourceActorNetGUID))
+			{
+				const AActor* TargetActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->TargetActorNetGUID);
+				if (SourceActor == TargetActor)
+				{
+					if (UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>())
+					{
+						SourceInventory->MoveInventoryItem(Data->SourceSlot, Data->TargetSlot);
+						SourceActor->ForceNetUpdate();
+					}
+				}
+			}
+		}
+		
+		// If Player and Source guid is valid, then we're moving an item from external inventory to player's inventory
+		else if (Data->bPlayerInventory && Data->SourceActorNetGUID.IsValid())
+		{
+			if (AActor* SourceActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->SourceActorNetGUID))
+			{
+				UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
+				UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>();
+				check(PlayerInventory && SourceInventory);
 
-			TargetInventory->MoveInventoryItem(Data->OldSlot, Data->NewSlot);
+				UInventoryItemInstance* SourceItemInstance = SourceInventory->FindItemInstanceInSlot(Data->SourceSlot);
+				check(SourceItemInstance);
+
+				PlayerInventory->Server_AddInventoryItemFromOtherSource(Data->TargetSlot, Data->SourceSlot, SourceInventory);
+			}
+		}
+
+		// if Player and Target guid is valid, then we're moving an item from player's inventory to external inventory
+		else if (Data->bPlayerInventory && Data->TargetActorNetGUID.IsValid())
+		{
 			
-			SourceActor->ForceNetUpdate();
+		}
+
+		// if above condition fails, and it's Player's inventory
+		else if (Data->bPlayerInventory)
+		{
+			if (UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>())
+			{
+				PlayerInventory->MoveInventoryItem(Data->SourceSlot, Data->TargetSlot);
+			}
 		}
 	}
 	

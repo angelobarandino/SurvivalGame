@@ -3,7 +3,6 @@
 
 #include "UI/InventoryItemSlotWidget.h"
 
-#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "ItemDefinitionLibrary.h"
 #include "ItemFragment_Inventory.h"
@@ -14,9 +13,7 @@
 #include "InventorySystem/InventoryItemDragDropOperation.h"
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventorySystem/InventoryManagerComponent.h"
-#include "Net/UnrealNetwork.h"
 #include "Pickups/IPickupable.h"
-#include "SurvivalGame/Player/SGPlayerController.h"
 #include "SurvivalGame/Player/SGPlayerState.h"
 #include "UI/InventoryItemDragPreview.h"
 #include "UI/InventoryItemTooltip.h"
@@ -195,21 +192,26 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 
 	if (const UInventoryItemDragDropOperation* Operation = Cast<UInventoryItemDragDropOperation>(InOperation))
 	{
-		UInventoryManagerComponent* SourceInventoryManager = Operation->SourceInventory;
-		
 		if (ASGPlayerState* PlayerState = Cast<ASGPlayerState>(GetOwningPlayerState()))
 		{
-			int32 ActorNetGUID = -1;
+			FGuid SourceActorNetGUID = FGuid();
 			if (const IPickupable* Pickupable = Cast<IPickupable>(Operation->SourceActor.Get()))
 			{
-				ActorNetGUID = Pickupable->GetActorNetGUID();
+				SourceActorNetGUID = Pickupable->GetActorNetGUID();
+			}
+
+			FGuid TargetActorNetGUID = FGuid();
+			if (const IPickupable* Pickupable = Cast<IPickupable>(OwningActor.Get()))
+			{
+				TargetActorNetGUID = Pickupable->GetActorNetGUID();
 			}
 			
 			UMoveInventoryItemPayload* MoveItemData = NewObject<UMoveInventoryItemPayload>();
-			MoveItemData->SourceActorNetGUID = ActorNetGUID;
-			MoveItemData->ItemInstance = Operation->DraggedItemInstance;
-			MoveItemData->OldSlot = Operation->DraggedItemSlot;
-			MoveItemData->NewSlot = SlotIndex;
+			MoveItemData->bPlayerInventory = GetOwningPlayer() == OwningActor || GetOwningPlayer() == Operation->SourceActor;
+			MoveItemData->SourceActorNetGUID = SourceActorNetGUID;
+			MoveItemData->TargetActorNetGUID = TargetActorNetGUID;
+			MoveItemData->SourceSlot = Operation->DraggedItemSlot;
+			MoveItemData->TargetSlot = SlotIndex;
 			
 			FGameplayEventData Payload;
 			Payload.EventTag = TAG_SurvivalGameItems_Inventory_MoveInventoryItem;
@@ -218,26 +220,8 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 			Payload.Target = OwningActor.Get();
 
 			PlayerState->Server_ActivateActorAbilityByEvent(TAG_SurvivalGameItems_Inventory_MoveInventoryItem, Payload);
+			return true;
 		}
-
-		if (InventoryManager == SourceInventoryManager)
-		{
-			// if (IPickupable* PickupableActor = Cast<IPickupable>(OwningActor))
-			// {
-			// 	PickupableActor->MoveInventorItem(Operation->DraggedItemSlot, SlotIndex);
-			// 	return true;
-			// }
-			//
-			// SourceInventoryManager->MoveInventorItem(Operation->DraggedItemSlot, SlotIndex);
-			// SourceInventoryManager->SetFocusedInventoryItemSlot(SlotIndex);
-		}
-
-		if (GetOwningPlayer() != OwningActor.Get())
-		{
-			OwningActor->ForceNetUpdate();
-		}
-
-		return true;
 	}
 	
 	return false;

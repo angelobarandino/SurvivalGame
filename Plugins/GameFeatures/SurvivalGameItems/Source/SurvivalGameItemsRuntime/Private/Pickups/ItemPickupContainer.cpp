@@ -3,7 +3,6 @@
 
 #include "Pickups/ItemPickupContainer.h"
 
-#include "AbilitySystemComponent.h"
 #include "InventorySystem/InventoryManagerComponent.h"
 #include "InventorySystem/InventoryTypes.h"
 #include "Net/UnrealNetwork.h"
@@ -16,10 +15,6 @@ AItemPickupContainer::AItemPickupContainer(const FObjectInitializer& ObjectIniti
 	NetDormancy = DORM_Initial;
 
 	InventoryManager = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryManagerComponent");
-	InventoryManager->SetIsReplicated(true);
-	
-	AbilitySystemComponent = CreateDefaultSubobject<UAbilitySystemComponent>("UAbilitySystemComponent");
-	AbilitySystemComponent->SetIsReplicated(true);
 }
 
 void AItemPickupContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -38,16 +33,10 @@ void AItemPickupContainer::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-	AbilitySystemComponent->InitAbilityActorInfo(this, this);
-	for (const TSubclassOf<UGameplayAbility>& Ability : StartupAbilities)
-	{
-		FGameplayAbilitySpec AbilitySpec(Ability);
-		AbilitySystemComponent->GiveAbility(AbilitySpec);
-	}
-	
 	if (HasAuthority())
 	{
+		NetGUID = FGuid::NewGuid();
+		
 		InventoryManager->MaxInventorySize = MaxInventorySize;
 
 		for (const FPickupItemEntry& PickupItem : Pickups.Items)
@@ -81,28 +70,4 @@ bool AItemPickupContainer::OnPickupAddedToInventory(const TMap<FGuid, FAddInvent
 	}
 
 	return bCanBeDestroyed;
-}
-
-void AItemPickupContainer::MoveInventorItem(const int32 OldSlot, const int32 NewSlot)
-{
-	FlushNetDormancy();
-	Server_MoveInventorItem(OldSlot, NewSlot);
-}
-
-void AItemPickupContainer::SetPickupItems(const TArray<FPickupItemEntry> Items)
-{
-	Pickups.AddItems(Items);
-}
-
-void AItemPickupContainer::Server_MoveInventorItem_Implementation(const int32 OldSlot, const int32 NewSlot)
-{
-	if (HasAuthority())
-	{
-		InventoryManager->MoveInventoryItem(OldSlot, NewSlot);
-	}
-}
-
-bool AItemPickupContainer::Server_MoveInventorItem_Validate(const int32 OldSlot, const int32 NewSlot)
-{
-	return InventoryManager != nullptr && OldSlot != NewSlot;
 }

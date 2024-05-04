@@ -104,7 +104,7 @@ FAddInventoryItemRequest FInventoryItemList::MakeAddItemRequestToSlot(const int3
 	FAddInventoryItemRequest Result;
 	Result.ItemDef = ItemDef;
 	Result.SlotCurrentItems = 0;
-	Result.Slot = 0;
+	Result.Slot = Slot;
 	
 	OwnerInventory->GetItemDefInventoryStack(ItemDef, Result.bSlotCanStack, Result.SlotMaxStack);
 	

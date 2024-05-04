@@ -38,17 +38,11 @@ public:
 		return true;
 	}
 
-	UPROPERTY(BlueprintReadOnly)
-	int32 SourceActorNetGUID;
-
-	UPROPERTY(BlueprintReadOnly)
-	TWeakObjectPtr<const UInventoryItemInstance> ItemInstance;
-	
-	UPROPERTY(BlueprintReadOnly)
-	int32 OldSlot;
-	
-	UPROPERTY(BlueprintReadOnly)
-	int32 NewSlot;
+	FGuid SourceActorNetGUID;
+	FGuid TargetActorNetGUID;
+	int32 SourceSlot;
+	int32 TargetSlot;
+	bool bPlayerInventory;
 };
 
 UCLASS()

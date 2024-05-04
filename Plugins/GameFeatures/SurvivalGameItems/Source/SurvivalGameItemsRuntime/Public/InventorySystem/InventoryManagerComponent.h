@@ -53,6 +53,9 @@ public:
 		return FindItemInstanceInSlot(FocusedInventoryItemSlot);
 	}
 
+	UFUNCTION(Server, Reliable)
+	void Server_AddInventoryItemFromOtherSource(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory);
+	
 public:
 	
 	void AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);

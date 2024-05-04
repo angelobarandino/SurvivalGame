@@ -125,6 +125,40 @@ UInventoryItemInstance* UInventoryManagerComponent::FindItemInstanceInSlot(const
 	return nullptr;
 }
 
+void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implementation(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
+{
+	if (SourceInventory)
+	{
+		if (UInventoryItemInstance* SourceItemInstance = SourceInventory->FindItemInstanceInSlot(SourceSlot))
+		{
+			const FAddInventoryItemRequest& Request = InventoryList.MakeAddItemRequestToSlot(TargetSlot, SourceItemInstance->GetItemDef());
+			if (Request.Result == EFindItemSlotResult::Invalid)
+			{
+				return;
+			}
+
+			FAddItemResult Result;
+			if (Request.Result == EFindItemSlotResult::ExistingItem)
+			{
+				Result = InventoryList.AddItemToSlot(Request, SourceItemInstance->GetItemCount());
+			}
+			else if (Request.Result == EFindItemSlotResult::InsertNewItem)
+			{
+				Result = InventoryList.CreateNewItem(Request, SourceItemInstance->GetItemCount());
+				if (Result.bSuccess)
+				{
+					ReplicateNewItemInstance(Result.Instance.Get());
+				}
+			}
+
+			if (Result.bSuccess)
+			{
+				SourceInventory->RemoveInventoryItem(SourceItemInstance);
+			}
+		}
+	}
+}
+
 void UInventoryManagerComponent::AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
 {
 	FAddItemResult Result = InventoryList.CreateNewItem(InventoryList.MakeAddOrNewItemRequest(ItemDef), ItemCount);
