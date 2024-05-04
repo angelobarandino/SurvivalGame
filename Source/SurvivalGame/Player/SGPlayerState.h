@@ -7,6 +7,8 @@
 #include "AbilitySystemInterface.h"
 #include "SGPlayerState.generated.h"
 
+struct FGameplayEventData;
+struct FGameplayTag;
 class UAttributeSet;
 class USGAttributeSet;
 class USGAbilitySystemComponent;
@@ -29,6 +31,10 @@ public:
 	
 	UAttributeSet* GetAttributeSet() const;
 
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void Server_ActivateActorAbilityByEvent(const FGameplayTag& EventTag, const FGameplayEventData& Payload);
+	
 protected:
 	
 	UPROPERTY(BlueprintReadOnly)

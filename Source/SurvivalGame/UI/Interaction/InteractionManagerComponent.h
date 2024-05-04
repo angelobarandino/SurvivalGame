@@ -23,6 +23,11 @@ public:
 	void HideInteraction();
 	void PushContentToInteractionPrompt(const TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData) const;
 
+	UInteractionDescriptor* GetInteractionDescriptor() const
+	{
+		return InteractionDescriptor;
+	}
+
 	DECLARE_DELEGATE_OneParam(FInteractionEvent, UInteractionDescriptor*);
 	FInteractionEvent OnShowInteraction;
 	FInteractionEvent OnHideInteraction;

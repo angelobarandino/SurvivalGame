@@ -28,7 +28,7 @@ public:
 	void UnbindInteraction(UInteractionDescriptor* Interaction);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Interaction")
-	void OnSetContentData(const UObject* ContentData);
+	void OnSetContentData(const UObject* ContentData, const UInteractionDescriptor* InteractionDescriptor);
 
-	virtual void PushContentToInteractionPrompt(TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData) = 0;
+	virtual void PushContentToInteractionPrompt(TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData, const UInteractionDescriptor* InteractionDescriptor) = 0;
 };

@@ -22,7 +22,8 @@ public class SurvivalGameItemsRuntime : ModuleRules
 		{
 			"Core",
 			"SurvivalGame",
-			"GameplayMessageRuntime"
+			"GameplayMessageRuntime",
+			"GameplayAbilities"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[]

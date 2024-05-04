@@ -24,4 +24,7 @@ public:
 	
 	UPROPERTY(BlueprintReadOnly)
 	TWeakObjectPtr<const UInventoryItemInstance> DraggedItemInstance;
+
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<const AActor> SourceActor;
 };

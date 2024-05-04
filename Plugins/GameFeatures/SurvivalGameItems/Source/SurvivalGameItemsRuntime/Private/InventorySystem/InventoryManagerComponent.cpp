@@ -104,7 +104,7 @@ FAddInventoryItemResult UInventoryManagerComponent::AddInventorItem(const TSubcl
 	return FAddInventoryItemResult::GenerateResult(ItemCount, RemainingItemCount);
 }
 
-bool UInventoryManagerComponent::MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot)
+bool UInventoryManagerComponent::MoveInventoryItem(const int32 CurrentSlot, const int32 NewSlot)
 {
 	Server_MoveInventorItem(CurrentSlot, NewSlot);
 	return true;

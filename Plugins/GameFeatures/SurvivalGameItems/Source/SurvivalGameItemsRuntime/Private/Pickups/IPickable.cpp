@@ -1,5 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
+#include "EngineUtils.h"
 #include "InventorySystem/InventoryManagerComponent.h"
 #include "InventorySystem/InventoryTypes.h"
 #include "Pickups/IPickupable.h"
@@ -60,3 +61,4 @@ bool UPickupableStatics::AddAllItemPickupToInventory(APlayerController* PlayerCo
 
 	return false;
 }
+

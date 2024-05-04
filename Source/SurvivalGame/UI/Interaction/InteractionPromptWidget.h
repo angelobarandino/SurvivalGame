@@ -27,5 +27,5 @@ public:
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget))
 	TObjectPtr<UCommonActivatableWidgetStack> InteractionWidgetStack;
 
-	virtual void PushContentToInteractionPrompt(TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData) override;
+	virtual void PushContentToInteractionPrompt(TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData, const UInteractionDescriptor* InteractionDescriptor) override;
 };

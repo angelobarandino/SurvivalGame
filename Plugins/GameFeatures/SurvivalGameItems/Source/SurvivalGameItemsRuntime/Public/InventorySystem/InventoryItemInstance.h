@@ -36,7 +36,7 @@ private:
 	friend struct FInventoryItemList;
 	friend class UInventoryManagerComponent;
 	friend class UInventoryItemInstanceStatics;
-	
+
 	UPROPERTY(Replicated)
 	TSubclassOf<UItemDefinition> ItemDef;
 

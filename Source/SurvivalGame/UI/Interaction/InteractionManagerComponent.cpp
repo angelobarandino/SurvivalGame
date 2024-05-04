@@ -43,7 +43,7 @@ void UInteractionManagerComponent::PushContentToInteractionPrompt(const TSubclas
 		{
 			if (IInteractionWidgetInterface* InteractionWidgetInterface = Cast<IInteractionWidgetInterface>(InteractionDescriptor->InteractionWidget))
 			{
-				InteractionWidgetInterface->PushContentToInteractionPrompt(WidgetClass, ContentData);
+				InteractionWidgetInterface->PushContentToInteractionPrompt(WidgetClass, ContentData, InteractionDescriptor);
 			}
 		}
 	}

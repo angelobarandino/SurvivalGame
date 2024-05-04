@@ -100,7 +100,7 @@ void USGGameplayAbility_Interact::ShowInteractionPanel(const FInteractionDefinit
 				InteractionDefinition.InteractableTarget);
 
 			InteractionDescriptor = NewObject<UInteractionDescriptor>();
-			InteractionDescriptor->SetInteractableObectName(InteractionDefinition.Name);;
+			InteractionDescriptor->SetInteractableObjectName(InteractionDefinition.Name);;
 			InteractionDescriptor->SetInteractionWidgetClass(InteractionWidgetClass);
 			InteractionDescriptor->SetInteractableTarget(InteractionDefinition.InteractableTarget);
 			InteractionDescriptor->SetInteractionOption(InteractionDefinition.InteractOptions);

@@ -32,8 +32,8 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	FAddInventoryItemResult AddInventorItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
 
-	UFUNCTION(Blueprintable, Category = "Inventory")
-	bool MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot);
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	bool MoveInventoryItem(const int32 CurrentSlot, const int32 NewSlot);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	bool RemoveInventoryItem(const UInventoryItemInstance* ItemInstance);

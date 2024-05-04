@@ -3,6 +3,7 @@
 
 #include "SGPlayerState.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Components/GameFrameworkComponentManager.h"
 #include "SurvivalGame/AbilitySystem/SGAbilitySystemComponent.h"
 #include "SurvivalGame/AbilitySystem/Attributes/SGAttributeSet.h"
@@ -35,4 +36,9 @@ UAbilitySystemComponent* ASGPlayerState::GetAbilitySystemComponent() const
 UAttributeSet* ASGPlayerState::GetAttributeSet() const
 {
 	return Cast<UAttributeSet>(Attributes);
+}
+
+void ASGPlayerState::Server_ActivateActorAbilityByEvent_Implementation(const FGameplayTag& EventTag, const FGameplayEventData& Payload)
+{
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(this, EventTag, Payload);
 }

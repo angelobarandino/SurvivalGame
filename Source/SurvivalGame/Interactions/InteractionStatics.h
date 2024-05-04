@@ -7,6 +7,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "InteractionStatics.generated.h"
 
+class UInteractionDescriptor;
 class UCommonActivatableWidget;
 class IInteractableTarget;
 /**

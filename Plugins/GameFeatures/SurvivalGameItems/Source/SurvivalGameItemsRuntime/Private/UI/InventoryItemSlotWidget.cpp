@@ -3,18 +3,32 @@
 
 #include "UI/InventoryItemSlotWidget.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "ItemDefinitionLibrary.h"
 #include "ItemFragment_Inventory.h"
+#include "NativeGameplayTags.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/PanelWidget.h"
 #include "Engine/AssetManager.h"
 #include "InventorySystem/InventoryItemDragDropOperation.h"
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventorySystem/InventoryManagerComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "Pickups/IPickupable.h"
+#include "SurvivalGame/Player/SGPlayerController.h"
+#include "SurvivalGame/Player/SGPlayerState.h"
 #include "UI/InventoryItemDragPreview.h"
 #include "UI/InventoryItemTooltip.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(InventoryItemSlotWidget)
+
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_SurvivalGameItems_Inventory_MoveInventoryItem, "SurvivalGameItems.Inventory.MoveItem");
+
+void UMoveInventoryItemPayload::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	UObject::GetLifetimeReplicatedProps(OutLifetimeProps);
+}
 
 UInventoryItemSlotWidget::UInventoryItemSlotWidget(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
@@ -88,15 +102,7 @@ void UInventoryItemSlotWidget::NativeConstruct()
 
 		if (InventoryManager && SlotIndex >= 0)
 		{
-			CurrentItemInstance = InventoryManager->FindItemInstanceInSlot(SlotIndex);
-			if (CurrentItemInstance == nullptr)
-			{
-				EmptyInventorySlot();
-				return;
-			}
-			
-			SetInventorySlotItem(CurrentItemInstance->GetItemDef(), CurrentItemInstance->GetItemCount());
-			SetInventoryItemTooltip();
+			SetInventorySlotItemInstance(InventoryManager->FindItemInstanceInSlot(SlotIndex));
 		}
 	}
 }
@@ -176,6 +182,7 @@ void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry,
 				DragDropOperation->DraggedItemInstance = CurrentItemInstance.Get();
 				DragDropOperation->DraggedItemSlot = CurrentItemInstance->GetItemSlot();
 				DragDropOperation->SourceInventory = InventoryManager;
+				DragDropOperation->SourceActor = OwningActor;
 				OutOperation = DragDropOperation;
 			}
 		}
@@ -189,18 +196,43 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 	if (const UInventoryItemDragDropOperation* Operation = Cast<UInventoryItemDragDropOperation>(InOperation))
 	{
 		UInventoryManagerComponent* SourceInventoryManager = Operation->SourceInventory;
+		
+		if (ASGPlayerState* PlayerState = Cast<ASGPlayerState>(GetOwningPlayerState()))
+		{
+			int32 ActorNetGUID = -1;
+			if (const IPickupable* Pickupable = Cast<IPickupable>(Operation->SourceActor.Get()))
+			{
+				ActorNetGUID = Pickupable->GetActorNetGUID();
+			}
+			
+			UMoveInventoryItemPayload* MoveItemData = NewObject<UMoveInventoryItemPayload>();
+			MoveItemData->SourceActorNetGUID = ActorNetGUID;
+			MoveItemData->ItemInstance = Operation->DraggedItemInstance;
+			MoveItemData->OldSlot = Operation->DraggedItemSlot;
+			MoveItemData->NewSlot = SlotIndex;
+			
+			FGameplayEventData Payload;
+			Payload.EventTag = TAG_SurvivalGameItems_Inventory_MoveInventoryItem;
+			Payload.OptionalObject = MoveItemData;
+			Payload.Instigator = GetOwningPlayer();
+			Payload.Target = OwningActor.Get();
+
+			PlayerState->Server_ActivateActorAbilityByEvent(TAG_SurvivalGameItems_Inventory_MoveInventoryItem, Payload);
+		}
 
 		if (InventoryManager == SourceInventoryManager)
 		{
-			InventoryManager->MoveInventorItem(Operation->DraggedItemSlot, SlotIndex);
+			// if (IPickupable* PickupableActor = Cast<IPickupable>(OwningActor))
+			// {
+			// 	PickupableActor->MoveInventorItem(Operation->DraggedItemSlot, SlotIndex);
+			// 	return true;
+			// }
+			//
+			// SourceInventoryManager->MoveInventorItem(Operation->DraggedItemSlot, SlotIndex);
+			// SourceInventoryManager->SetFocusedInventoryItemSlot(SlotIndex);
 		}
 
-		if (InventoryManager)
-		{
-			InventoryManager->SetFocusedInventoryItemSlot(SlotIndex);
-		}
-
-		if (OwningActor.Get())
+		if (GetOwningPlayer() != OwningActor.Get())
 		{
 			OwningActor->ForceNetUpdate();
 		}

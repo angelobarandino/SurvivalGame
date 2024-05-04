@@ -13,6 +13,44 @@ class UInventoryItemTooltip;
 class UInventoryManagerComponent;
 class UInventoryItemDragPreview;
 
+USTRUCT(Blueprintable)
+struct FMoveItem
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UInventoryManagerComponent> TargetInventoryManager;
+	
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UInventoryManagerComponent> SourceInventoryManager;
+
+};
+
+UCLASS(Blueprintable)
+class UMoveInventoryItemPayload : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual bool IsSupportedForNetworking() const override
+	{
+		return true;
+	}
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 SourceActorNetGUID;
+
+	UPROPERTY(BlueprintReadOnly)
+	TWeakObjectPtr<const UInventoryItemInstance> ItemInstance;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 OldSlot;
+	
+	UPROPERTY(BlueprintReadOnly)
+	int32 NewSlot;
+};
+
 UCLASS()
 class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemSlotWidget : public UUserWidget
 {

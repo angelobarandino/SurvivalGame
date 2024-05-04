@@ -225,7 +225,7 @@ FAddItemResult FInventoryItemList::CreateNewItem(const FAddInventoryItemRequest&
 	ItemInstance->ItemCount = ItemsToAdd;
 	ItemInstance->ItemDef = ItemRequest.ItemDef;
 	ItemInstance->ItemSlot = ItemRequest.Slot;
-	
+
 	FInventoryItemEntry& NewItem = Items.AddDefaulted_GetRef();
 	NewItem.ItemInstance = ItemInstance;
 	NewItem.ItemCount = ItemsToAdd;

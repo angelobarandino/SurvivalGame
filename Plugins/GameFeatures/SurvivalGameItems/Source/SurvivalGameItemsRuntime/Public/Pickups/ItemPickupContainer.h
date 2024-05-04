@@ -9,6 +9,8 @@
 #include "ItemPickupContainer.generated.h"
 
 class UInventoryManagerComponent;
+class UAbilitySystemComponent;
+class UGameplayAbility;
 
 UCLASS()
 class SURVIVALGAMEITEMSRUNTIME_API AItemPickupContainer : public AInteractableActor, public IPickupable
@@ -29,6 +31,8 @@ public:
 	// ~Start IPickupable
 	virtual TArray<FPickupItemEntry> GetPickupItems() const override;
 	virtual bool OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator) override;
+	virtual void MoveInventorItem(const int32 OldSlot, const int32 NewSlot) override;
+	virtual uint32 GetActorNetGUID() const override { return NetGUID; }
 	// ~End IPickupable
 
 	UFUNCTION(BlueprintCallable)
@@ -38,14 +42,26 @@ public:
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
 	bool bDestroyOnPickup = true;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = "Item Pickup", meta = (ExposeOnSpawn))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Pickup", meta = (ExposeOnSpawn))
 	FPickupItemCollection Pickups;
 
-	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Replicated, Category = "Inventory", meta = (ExposeOnSpawn))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (ExposeOnSpawn))
 	int32 MaxInventorySize = 15;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UInventoryManagerComponent> InventoryManager;
+
+	UPROPERTY(BlueprintReadOnly)
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<UGameplayAbility>> StartupAbilities;
+
+	UPROPERTY(Transient, Replicated)
+	uint32 NetGUID;
 	
+private:
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Server_MoveInventorItem(const int32 OldSlot, const int32 NewSlot);
 };

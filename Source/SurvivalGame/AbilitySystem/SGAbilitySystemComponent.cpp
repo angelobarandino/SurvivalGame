@@ -105,6 +105,6 @@ void USGAbilitySystemComponent::OnGiveAbility(FGameplayAbilitySpec& AbilitySpec)
 	{
 		AbilitySpec.DynamicAbilityTags.AddTag(GameplayAbility->InputTag);	
 	}
-	
+
 	Super::OnGiveAbility(AbilitySpec);
 }
