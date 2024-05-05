@@ -22,6 +22,12 @@ class SURVIVALGAMEITEMSRUNTIME_API UInventoryGrid : public UUserWidget
 
 public:
 	UInventoryGrid(const FObjectInitializer& ObjectInitializer);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InventoryGrid")
+	float SlotPadding = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InventoryGrid")
+	float SlotSize = 90;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "InventoryGrid")
 	int32 NumOfGridColumn = 7;
@@ -46,6 +52,7 @@ public:
 protected:
 	virtual void NativeConstruct() override;
 	virtual void NativeDestruct() override;
+	virtual void NativePreConstruct() override;
 	
 	UFUNCTION(BlueprintImplementableEvent, Category = "InventoryGrid")
 	void OnSetOwningActor();
@@ -59,6 +66,7 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "InventoryGrid")
 	void BuildInventorySlots(const int32 MaxInventorySize);
 	
+	UFUNCTION(BlueprintCallable, Category = "InventoryGrid")
 	void CreateInventorySlot(const TSubclassOf<UInventoryItemSlotWidget> SlotClass, const int32 SlotIndex, const int32 Row, const int32 Column);
 
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget), Category = "InventoryGrid")

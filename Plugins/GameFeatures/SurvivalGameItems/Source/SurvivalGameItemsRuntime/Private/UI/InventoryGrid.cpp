@@ -32,6 +32,18 @@ void UInventoryGrid::NativeDestruct()
 	OwningActor.Reset();
 }
 
+void UInventoryGrid::NativePreConstruct()
+{
+	Super::NativePreConstruct();
+
+	if (InventoryGrid)
+	{
+		InventoryGrid->SetSlotPadding(SlotPadding);
+		InventoryGrid->SetMinDesiredSlotHeight(SlotSize);
+		InventoryGrid->SetMinDesiredSlotWidth(SlotSize);
+	}
+}
+
 void UInventoryGrid::GenerateInventoryGridFromOwningActor(AActor* InOwningActor)
 {
 	if (InOwningActor)
@@ -104,6 +116,7 @@ void UInventoryGrid::CreateInventorySlot(const TSubclassOf<UInventoryItemSlotWid
 				SlotWidget->bEnableSetFocusItem = bEnableSetFocusItem;
 				SlotWidget->OverrideTooltipWidgetClass = TooltipWidgetClass;
 
+				SlotWidget->InventoryGrid = this;
 				SlotWidget->OwningActor = OwningActor;
 				SlotWidget->OwningInventoryManager = OwningInventoryManager;
 				SlotWidget->ItemInstance = OwningInventoryManager->FindItemInstanceInSlot(SlotIndex);

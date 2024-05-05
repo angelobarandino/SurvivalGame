@@ -15,6 +15,7 @@
 #include "InventorySystem/InventoryManagerComponent.h"
 #include "Pickups/IPickupable.h"
 #include "SurvivalGame/Player/SGPlayerState.h"
+#include "UI/InventoryGrid.h"
 #include "UI/InventoryItemDragPreview.h"
 #include "UI/InventoryItemTooltip.h"
 
@@ -117,7 +118,8 @@ void UInventoryItemSlotWidget::NativeConstruct()
 void UInventoryItemSlotWidget::NativeDestruct()
 {
 	Super::NativeDestruct();
-	
+
+	InventoryGrid = nullptr;
 	TooltipWidgetClass = nullptr;
 	ItemInstance = nullptr;
 	
@@ -137,11 +139,11 @@ FReply UInventoryItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeom
 
 void UInventoryItemSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (ItemInstance && bEnableSetFocusItem)
+	if (ItemInstance)
 	{
 		Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 
-		if (OwningInventoryManager.IsValid())
+		if (OwningInventoryManager.IsValid() && bEnableSetFocusItem)
 		{
 			OwningInventoryManager->SetFocusedInventoryItemSlot(ItemInstance->GetItemSlot());
 		}
@@ -150,11 +152,11 @@ void UInventoryItemSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, c
 
 void UInventoryItemSlotWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
-	if (ItemInstance && bEnableSetFocusItem)
+	if (ItemInstance)
 	{
 		Super::NativeOnMouseLeave(InMouseEvent);
 		
-		if (OwningInventoryManager.IsValid())
+		if (OwningInventoryManager.IsValid() && bEnableSetFocusItem)
 		{
 			OwningInventoryManager->SetFocusedInventoryItemSlot(-1);
 		}
@@ -247,6 +249,12 @@ UUserWidget* UInventoryItemSlotWidget::CreateDragPreview()
 
 	if (UInventoryItemDragPreview* ItemDragPreview = Cast<UInventoryItemDragPreview>(UWidgetBlueprintLibrary::Create(this, DragPreviewWidgetClass, GetOwningPlayer())))
 	{
+		if (InventoryGrid)
+		{
+			ItemDragPreview->SizeBoxRoot->SetWidthOverride(InventoryGrid->SlotSize);
+			ItemDragPreview->SizeBoxRoot->SetHeightOverride(InventoryGrid->SlotSize);
+		}
+
 		ItemDragPreview->ItemInstance = ItemInstance;
 		return ItemDragPreview;
 	}

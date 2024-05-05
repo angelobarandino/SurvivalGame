@@ -105,10 +105,13 @@ protected:
 
 private:
 	friend UInventoryGrid;
+	
+	UPROPERTY()
+	TObjectPtr<const UInventoryGrid> InventoryGrid;
 
 	UPROPERTY()
 	TObjectPtr<const UInventoryItemInstance> ItemInstance;
-	
+
 	TWeakObjectPtr<UInventoryManagerComponent> OwningInventoryManager;
 	
 	TSoftClassPtr<UInventoryItemTooltip> TooltipWidgetClass;
@@ -116,4 +119,5 @@ private:
 
 	UFUNCTION()
 	UUserWidget* CreateDragPreview();
+	
 };
