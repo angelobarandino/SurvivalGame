@@ -33,6 +33,8 @@ void UInteractionLayer::OnInitialize()
 
 void UInteractionLayer::ReleaseSlateResources(bool bReleaseChildren)
 {
+	InteractionWidgetPool.ReleaseAll(true);
+	
 	if (CurrentInteractionSlot.Get())
 	{
 		CurrentInteractionSlot.Get()->ReleaseSlateResources(bReleaseChildren);

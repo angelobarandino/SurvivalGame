@@ -31,31 +31,41 @@ UInventoryItemSlotWidget::UInventoryItemSlotWidget(const FObjectInitializer& Obj
 {
 }
 
-void UInventoryItemSlotWidget::SetInventorySlotItemInstance(const UInventoryItemInstance* ItemInstance)
+void UInventoryItemSlotWidget::SetInventorySlotItemInstance(const UInventoryItemInstance* InItemInstance)
 {
-	if (ItemInstance == nullptr)
+	if (InItemInstance == nullptr)
 	{
 		EmptyInventorySlot();
 		return;
 	}
 
-	CurrentItemInstance = ItemInstance;
-	SetInventorySlotItem(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
+	ItemInstance = InItemInstance;
+	SetInventorySlotItem(InItemInstance->GetItemDef(), InItemInstance->GetItemCount());
 	SetInventoryItemTooltip();
 }
 
 void UInventoryItemSlotWidget::ClearInventorySlotItemInstance()
 {
 	EmptyInventorySlot();
-	CurrentItemInstance = nullptr;
+	ItemInstance = nullptr;
+}
+
+void UInventoryItemSlotWidget::ReleaseSlateResources(bool bReleaseChildren)
+{
+	Super::ReleaseSlateResources(bReleaseChildren);
+}
+
+void UInventoryItemSlotWidget::BeginDestroy()
+{
+	Super::BeginDestroy();
 }
 
 void UInventoryItemSlotWidget::SetInventoryItemTooltip()
 {
-	if (CurrentItemInstance && CurrentItemInstance->GetItemDef())
+	if (ItemInstance && ItemInstance->GetItemDef())
 	{
 		const UItemFragment_Inventory* InventoryFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<
-			UItemFragment_Inventory>(CurrentItemInstance.Get()->GetItemDef());
+			UItemFragment_Inventory>(ItemInstance->GetItemDef());
 
 		if (InventoryFragment != nullptr && !InventoryFragment->TooltipWidgetClass.IsNull())
 		{
@@ -74,13 +84,13 @@ void UInventoryItemSlotWidget::SetInventoryItemTooltip()
 
 void UInventoryItemSlotWidget::OnTooltipWidgetLoaded()
 {
-	if (CurrentItemInstance.Get())
+	if (ItemInstance)
 	{
 		if (const TSubclassOf<UInventoryItemTooltip> UserWidgetClass = TooltipWidgetClass.Get())
 		{
 			if (UInventoryItemTooltip* TooltipWidget = Cast<UInventoryItemTooltip>(UWidgetBlueprintLibrary::Create(GetWorld(), UserWidgetClass, GetOwningPlayer())))
 			{
-				TooltipWidget->SetItemData(CurrentItemInstance->GetItemDef(), CurrentItemInstance->GetItemCount());
+				TooltipWidget->SetItemData(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
 				SetToolTip(TooltipWidget);
 			}
 		}
@@ -93,29 +103,31 @@ void UInventoryItemSlotWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	if (OwningActor.IsValid())
+	if (ItemInstance)
 	{
-		InventoryManager = OwningActor->FindComponentByClass<UInventoryManagerComponent>();
-
-		if (InventoryManager && SlotIndex >= 0)
-		{
-			SetInventorySlotItemInstance(InventoryManager->FindItemInstanceInSlot(SlotIndex));
-		}
+		SetInventorySlotItem(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
+		SetInventoryItemTooltip();
+	}
+	else
+	{
+		ClearInventorySlotItemInstance();
 	}
 }
 
 void UInventoryItemSlotWidget::NativeDestruct()
 {
-	InventoryManager = nullptr;
-	CurrentItemInstance = nullptr;
-	TooltipWidgetClass = nullptr;
-	
 	Super::NativeDestruct();
+	
+	TooltipWidgetClass = nullptr;
+	ItemInstance = nullptr;
+	
+	OwningInventoryManager.Reset();
+	OwningActor.Reset();
 }
 
 FReply UInventoryItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (CurrentItemInstance)
+	if (ItemInstance)
 	{
 		return Super::NativeOnMouseButtonDown(InGeometry, InMouseEvent);
 	}
@@ -125,26 +137,26 @@ FReply UInventoryItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeom
 
 void UInventoryItemSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
-	if (CurrentItemInstance)
+	if (ItemInstance && bEnableSetFocusItem)
 	{
 		Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
 
-		if (InventoryManager)
+		if (OwningInventoryManager.IsValid())
 		{
-			InventoryManager->SetFocusedInventoryItemSlot(CurrentItemInstance->GetItemSlot());
+			OwningInventoryManager->SetFocusedInventoryItemSlot(ItemInstance->GetItemSlot());
 		}
 	}
 }
 
 void UInventoryItemSlotWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
-	if (CurrentItemInstance)
+	if (ItemInstance && bEnableSetFocusItem)
 	{
 		Super::NativeOnMouseLeave(InMouseEvent);
 		
-		if (InventoryManager)
+		if (OwningInventoryManager.IsValid())
 		{
-			InventoryManager->SetFocusedInventoryItemSlot(-1);
+			OwningInventoryManager->SetFocusedInventoryItemSlot(-1);
 		}
 	}
 }
@@ -153,7 +165,7 @@ FReply UInventoryItemSlotWidget::NativeOnPreviewMouseButtonDown(const FGeometry&
 {
 	Super::NativeOnPreviewMouseButtonDown(InGeometry, InMouseEvent);
 	
-	if (CurrentItemInstance.Get() && InventoryManager && bEnableDragAndDrop)
+	if (IsValid(ItemInstance) && OwningInventoryManager.IsValid() && bEnableDragAndDrop)
 	{
 		if (InMouseEvent.IsMouseButtonDown(EKeys::LeftMouseButton))
 		{
@@ -168,7 +180,7 @@ void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry,
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
 
-	if (CurrentItemInstance.Get() && InventoryManager && bEnableDragAndDrop)
+	if (IsValid(ItemInstance) && OwningInventoryManager.IsValid() && bEnableDragAndDrop)
 	{
 		if (UUserWidget* PreviewWidget = CreateDragPreview())
 		{
@@ -176,9 +188,8 @@ void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry,
 				UWidgetBlueprintLibrary::CreateDragDropOperation(UInventoryItemDragDropOperation::StaticClass())))
 			{
 				DragDropOperation->DefaultDragVisual = PreviewWidget;
-				DragDropOperation->DraggedItemInstance = CurrentItemInstance.Get();
-				DragDropOperation->DraggedItemSlot = CurrentItemInstance->GetItemSlot();
-				DragDropOperation->SourceInventory = InventoryManager;
+				DragDropOperation->DraggedItemInstance = ItemInstance;
+				DragDropOperation->DraggedItemSlot = ItemInstance->GetItemSlot();
 				DragDropOperation->SourceActor = OwningActor;
 				OutOperation = DragDropOperation;
 			}
@@ -236,7 +247,7 @@ UUserWidget* UInventoryItemSlotWidget::CreateDragPreview()
 
 	if (UInventoryItemDragPreview* ItemDragPreview = Cast<UInventoryItemDragPreview>(UWidgetBlueprintLibrary::Create(this, DragPreviewWidgetClass, GetOwningPlayer())))
 	{
-		ItemDragPreview->ItemInstance = CurrentItemInstance;
+		ItemDragPreview->ItemInstance = ItemInstance;
 		return ItemDragPreview;
 	}
 

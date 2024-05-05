@@ -8,6 +8,7 @@
 #include "InventoryItemSlotWidget.generated.h"
 
 
+class UInventoryGrid;
 struct FStreamableHandle;
 class UInventoryItemTooltip;
 class UInventoryManagerComponent;
@@ -53,30 +54,30 @@ class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemSlotWidget : public UUserWidget
 public:
 	UInventoryItemSlotWidget(const FObjectInitializer& ObjectInitializer);
 
-
 	UFUNCTION(BlueprintCallable)
-	void SetInventorySlotItemInstance(const UInventoryItemInstance* ItemInstance);
+	void SetInventorySlotItemInstance(const UInventoryItemInstance* InItemInstance);
 	
 	UFUNCTION(BlueprintCallable)
 	void ClearInventorySlotItemInstance();
-	
-	UFUNCTION(BlueprintCallable)
-	void SetInventorySlotIndex(const int32 InSlotIndex)
-	{
-		SlotIndex = InSlotIndex;
-	}
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	bool bEnableDragAndDrop = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TSoftClassPtr<UInventoryItemTooltip> OverrideTooltipWidgetClass;
-	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ExposeOnSpawn))
 	TWeakObjectPtr<AActor> OwningActor = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ExposeOnSpawn))
 	int32 SlotIndex = -1;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bEnableDragAndDrop = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	bool bEnableSetFocusItem = true;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSoftClassPtr<UInventoryItemTooltip> OverrideTooltipWidgetClass;
+
+	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
+	
+	virtual void BeginDestroy() override;
 	
 protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
@@ -87,13 +88,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item")
 	TSubclassOf<UInventoryItemDragPreview> DragPreviewWidgetClass;
-
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UInventoryManagerComponent> InventoryManager;
-
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<const UInventoryItemInstance> CurrentItemInstance;
-
 	
 	void SetInventoryItemTooltip();
 	void OnTooltipWidgetLoaded();
@@ -110,9 +104,15 @@ protected:
 	// ~End UUserWidget
 
 private:
+	friend UInventoryGrid;
+
+	UPROPERTY()
+	TObjectPtr<const UInventoryItemInstance> ItemInstance;
+	
+	TWeakObjectPtr<UInventoryManagerComponent> OwningInventoryManager;
+	
 	TSoftClassPtr<UInventoryItemTooltip> TooltipWidgetClass;
 	TSharedPtr<FStreamableHandle> StreamingHandle;
-
 
 	UFUNCTION()
 	UUserWidget* CreateDragPreview();

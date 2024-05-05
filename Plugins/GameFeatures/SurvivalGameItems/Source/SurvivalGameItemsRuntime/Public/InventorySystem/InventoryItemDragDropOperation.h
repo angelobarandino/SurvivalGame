@@ -17,9 +17,6 @@ class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemDragDropOperation : public UDra
 	
 public:
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UInventoryManagerComponent> SourceInventory;
-	
-	UPROPERTY(BlueprintReadOnly)
 	int32 DraggedItemSlot;
 	
 	UPROPERTY(BlueprintReadOnly)
