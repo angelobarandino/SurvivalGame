@@ -20,17 +20,13 @@ public:
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
-	virtual void OnConstruction(const FTransform& Transform) override;
-	
-	virtual void PostInitializeComponents() override;
-	
 protected:
 	virtual void BeginPlay() override;
 
 public:
 	// ~Start IPickupable
-	virtual TArray<FPickupItemEntry> GetPickupItems() const override;
-	virtual bool OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator) override;
+	virtual TArray<FPickupItemEntry> GetPickupItems() override;
+	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) override;
 	virtual FGuid GetActorNetGUID() const override { return NetGUID; }
 	// ~End IPickupable
 

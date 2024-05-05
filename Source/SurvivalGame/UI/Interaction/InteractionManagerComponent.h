@@ -10,6 +10,7 @@
 class UCommonActivatableWidget;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FHoldToInteractProgress, float, Progress);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FHoldToInteractCompleted);
 
 UCLASS(BlueprintType, Blueprintable)
 class SURVIVALGAME_API UInteractionManagerComponent : public UControllerComponent
@@ -40,7 +41,11 @@ public:
 
 	UPROPERTY(BlueprintAssignable)	
 	FHoldToInteractProgress OnHoldProgress;
-	
+
+	UPROPERTY(BlueprintAssignable)
+	FHoldToInteractCompleted OnHoldCompleted;
+
+
 private:
 	UPROPERTY()
 	TObjectPtr<UInteractionDescriptor> InteractionDescriptor;

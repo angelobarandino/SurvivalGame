@@ -11,6 +11,7 @@ class UInventoryItemInstance;
 class UItemDefinition;
 struct FAddInventoryItemResult;
 struct FPickupItemEntry;
+struct FPickupItemHandle;
 
 UINTERFACE(MinimalAPI, BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
 class UPickupable : public UInterface
@@ -24,10 +25,10 @@ class SURVIVALGAMEITEMSRUNTIME_API IPickupable
 
 public:
 	UFUNCTION(BlueprintCallable)
-	virtual TArray<FPickupItemEntry> GetPickupItems() const = 0;
+	virtual TArray<FPickupItemEntry> GetPickupItems() = 0;
 
 	UFUNCTION()
-	virtual bool OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator) = 0;
+	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) = 0;
 
 	virtual FGuid GetActorNetGUID() const { return FGuid(); }
 };

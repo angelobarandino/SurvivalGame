@@ -24,19 +24,23 @@ public:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 	
-	// ~Start IPickupable
-	virtual TArray<FPickupItemEntry> GetPickupItems() const override;
-	virtual bool OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator) override;
-	// ~End IPickupable
+	void SetPickupItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
+	{
+		PickupItem.ItemDef = ItemDef;
+		PickupItem.ItemStack = ItemCount;
+		SetPickupObjectMesh();
+	}
 
-	UFUNCTION(BlueprintCallable)
-	void SetPickupItems(const TArray<FPickupItemEntry> Items);
+	// ~Start IPickupable
+	virtual TArray<FPickupItemEntry> GetPickupItems() override;
+	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) override;
+	// ~End IPickupable
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
 	bool bDestroyOnPickup = true;
-	
+
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, ReplicatedUsing=OnRep_Pickups, Category = "Item Pickup", meta = (ExposeOnSpawn))
-	FPickupItemCollection Pickups;
+	FPickupItemEntry PickupItem;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")

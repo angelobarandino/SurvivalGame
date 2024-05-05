@@ -96,10 +96,14 @@ void UInteractionStatics::SetInteractOptionData(FInteractOption& InteractOption)
 {
 	if (InteractOption.InteractionAbilityToGrant)
 	{
-		if (const USGGameplayAbility_InteractAction* Ability = GetDefault<USGGameplayAbility_InteractAction>(InteractOption.InteractionAbilityToGrant))
+		if (const USGGameplayAbility_InteractAction* InteractAbility = GetDefault<USGGameplayAbility_InteractAction>(InteractOption.InteractionAbilityToGrant))
 		{
-			InteractOption.InteractInputTag = Ability->InputTag;
-			InteractOption.InteractDuration = Ability->InteractDuration;
+			InteractOption.InteractInputTag = InteractAbility->InputTag;
+
+			if (const USGGameplayAbility_InteractDuration* InteractDurationAbility = Cast<USGGameplayAbility_InteractDuration>(InteractAbility))
+			{
+				InteractOption.InteractDuration = InteractDurationAbility->InteractDuration;
+			}
 		}
 	}
 }

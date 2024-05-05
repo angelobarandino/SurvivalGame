@@ -1,13 +1,13 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Net/Serialization/FastArraySerializer.h"
+#include "InventorySystem/InventoryManagerComponent.h"
 #include "PickupItemCollection.generated.h"
 
 class UItemDefinition;
 
 USTRUCT(BlueprintType)
-struct FPickupItemEntry : public FFastArraySerializerItem
+struct FPickupItemEntry
 {
 	GENERATED_BODY()
 	
@@ -26,30 +26,26 @@ struct FPickupItemEntry : public FFastArraySerializerItem
 	
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
 	int32 ItemStack = 1;
+
+	UPROPERTY(BlueprintReadOnly)
+	int32 ItemSlot = -1;
 	
-	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-	int32 Slot = -1;
+	TWeakObjectPtr<const UInventoryItemInstance> ItemInstanceRef;
 };
 
 USTRUCT(BlueprintType)
-struct FPickupItemCollection : public FFastArraySerializer
+struct FPickupItemCollection
 {
 	GENERATED_BODY()
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadWrite)
-	TArray<FPickupItemEntry>	Items;
-
-	bool NetDeltaSerialize(FNetDeltaSerializeInfo & DeltaParms)
-	{
-		return FFastArraySerializer::FastArrayDeltaSerialize<FPickupItemEntry, FPickupItemCollection>(Items, DeltaParms, *this);
-	}
-
-	void AddItems(const TArray<FPickupItemEntry>& NewItems);
-	void UpdateItemCount(FGuid EntryId, const int32 NewItemStack);
+	TArray<FPickupItemEntry> Items;
 };
 
-template<>
-struct TStructOpsTypeTraits<FPickupItemCollection> : public TStructOpsTypeTraitsBase2<FPickupItemCollection>
+USTRUCT()
+struct FPickupItemHandle
 {
-	enum { WithNetDeltaSerializer = true, };
+	GENERATED_BODY()
+
+	TMap<FGuid, FAddInventoryItemResult> AddItemResults;
 };

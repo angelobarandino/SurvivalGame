@@ -17,8 +17,11 @@ AItemPickup::AItemPickup(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	ItemPickupMesh->SetCollisionProfileName(FName("Interactable"));
 	SetRootComponent(ItemPickupMesh);
 
+	
 	bReplicates = true;
-	NetUpdateFrequency = 5.f;
+	NetUpdateFrequency = 15.f;
+	MinNetUpdateFrequency = 5.f;
+	NetCullDistanceSquared = 1000000;
 	NetDormancy = DORM_Initial;
 	SetReplicatingMovement(true);
 }
@@ -27,7 +30,7 @@ void AItemPickup::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ThisClass, Pickups);
+	DOREPLIFETIME(ThisClass, PickupItem);
 }
 
 void AItemPickup::OnConstruction(const FTransform& Transform)
@@ -37,21 +40,26 @@ void AItemPickup::OnConstruction(const FTransform& Transform)
 	SetPickupObjectMesh();
 }
 
-TArray<FPickupItemEntry> AItemPickup::GetPickupItems() const
+TArray<FPickupItemEntry> AItemPickup::GetPickupItems()
 {
-	return Pickups.Items;
+	TArray<FPickupItemEntry> PickupItems;
+	PickupItems.Add(PickupItem);
+	return PickupItems;
 }
 
-bool AItemPickup::OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator)
+bool AItemPickup::OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator)
 {
-	for (const auto& Result : PickupResultMap)
+	for (auto& AddItemResult : PickupItemHandle.AddItemResults)
 	{
-		Pickups.UpdateItemCount(Result.Key, Result.Value.RemainingStack);
+		if (AddItemResult.Key == PickupItem.InstanceId)
+		{
+			PickupItem.ItemStack = AddItemResult.Value.RemainingStack;
+		}
 	}
 	
-	FlushNetDormancy();
+	ForceNetUpdate();
 
-	const bool bCanBeDestroyed = Pickups.Items.Num() == 0 && bDestroyOnPickup;
+	const bool bCanBeDestroyed = PickupItem.ItemStack == 0 && bDestroyOnPickup;
 
 	if (bCanBeDestroyed)
 	{
@@ -61,10 +69,6 @@ bool AItemPickup::OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemRe
 	return bCanBeDestroyed;
 }
 
-void AItemPickup::SetPickupItems(const TArray<FPickupItemEntry> Items)
-{
-	Pickups.AddItems(Items);
-}
 
 void AItemPickup::OnRep_Pickups()
 {
@@ -73,23 +77,17 @@ void AItemPickup::OnRep_Pickups()
 
 void AItemPickup::SetPickupObjectMesh()
 {
-	FPickupItemEntry Pickup;
-	if (Pickups.Items.Num() > 0)
-	{
-		Pickup = Pickups.Items[0];	
-	}
-	
-	if (Pickup.ItemDef == nullptr || Pickup.ItemStack == 0)
+	if (PickupItem.ItemDef == nullptr || PickupItem.ItemStack == 0)
 	{
 		return;
 	}
 	
-	if (const UItemFragment_Assets* AssetFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<UItemFragment_Assets>(Pickup.ItemDef))
+	if (const UItemFragment_Assets* AssetFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<UItemFragment_Assets>(PickupItem.ItemDef))
 	{
 		ItemPickupMesh->SetStaticMesh(AssetFragment->Mesh.LoadSynchronous());
 	}
 	
-	if (const UItemFragment_Interaction* InteractionFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<UItemFragment_Interaction>(Pickup.ItemDef))
+	if (const UItemFragment_Interaction* InteractionFragment = UItemDefinitionLibrary::FindItemDefinitionFragment<UItemFragment_Interaction>(PickupItem.ItemDef))
 	{
 		InteractableObjectName = InteractionFragment->DisplayName;
 		InteractOptions = InteractionFragment->InteractOptions;

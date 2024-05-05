@@ -1,8 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-#include "EngineUtils.h"
 #include "InventorySystem/InventoryManagerComponent.h"
-#include "InventorySystem/InventoryTypes.h"
 #include "Pickups/IPickupable.h"
 #include "Pickups/ItemPickup.h"
 #include "Pickups/PickupItemCollection.h"
@@ -30,9 +28,7 @@ void UPickupableStatics::SpawnItemPickupFromItemInstance(const TSubclassOf<AItem
 	if (AItemPickup* ItemPickup = World->SpawnActorDeferred<AItemPickup>(ItemPickupClass, Transform, nullptr, OwnerPawn))
 	{
 		ItemPickup->SetNetDormancy(DORM_DormantAll);
-		ItemPickup->SetPickupItems({
-			FPickupItemEntry(ItemInstance->GetItemDef(), ItemInstance->GetItemCount())
-		});
+		ItemPickup->SetPickupItem(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
 		ItemPickup->FinishSpawning(Transform);
 	}
 }
@@ -48,15 +44,15 @@ bool UPickupableStatics::AddAllItemPickupToInventory(APlayerController* PlayerCo
 	{
 		const TArray<FPickupItemEntry> PickupInstances = Pickup->GetPickupItems();
 
-		TMap<FGuid, FAddInventoryItemResult> ResultMap;
-		ResultMap.Reserve(PickupInstances.Num());
+		FPickupItemHandle PickupItemHandle;
+		PickupItemHandle.AddItemResults.Reserve(PickupInstances.Num());
 		
 		for (const FPickupItemEntry& Entry : PickupInstances)
 		{
-			ResultMap.Add(Entry.InstanceId, InventoryManager->AddInventorItem(Entry.ItemDef, Entry.ItemStack));
+			PickupItemHandle.AddItemResults.Add(Entry.InstanceId, InventoryManager->AddInventorItem(Entry.ItemDef, Entry.ItemStack));
 		}
 		
-		return Pickup->OnPickupAddedToInventory(ResultMap, PlayerController);
+		return Pickup->OnPickupAddedToInventory(PickupItemHandle, PlayerController);
 	}
 
 	return false;

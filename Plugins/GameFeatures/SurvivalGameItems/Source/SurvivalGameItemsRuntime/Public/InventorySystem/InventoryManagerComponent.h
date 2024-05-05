@@ -27,7 +27,7 @@ public:
 	int32 GetMaxInventorySize() const { return  MaxInventorySize; }
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
-	TArray<UInventoryItemInstance*> GetItems() const;
+	TArray<UInventoryItemInstance*> GetItems(const bool bSort = false) const;
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	FAddInventoryItemResult AddInventorItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
@@ -58,7 +58,7 @@ public:
 	
 public:
 	
-	void AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
+	UInventoryItemInstance* AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
 	
 	void GetItemDefInventoryStack(TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const;
 

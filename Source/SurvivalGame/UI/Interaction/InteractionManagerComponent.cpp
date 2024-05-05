@@ -38,7 +38,7 @@ void UInteractionManagerComponent::PushContentToInteractionPrompt(const TSubclas
 {
 	if (InteractionDescriptor)
 	{
-		UUserWidget* InteractionWidget = InteractionDescriptor->InteractionWidget.Get();
+		const UUserWidget* InteractionWidget = InteractionDescriptor->InteractionWidget.Get();
 		if (InteractionWidget && InteractionDescriptor->InteractionWidget->Implements<UInteractionWidgetInterface>())
 		{
 			if (IInteractionWidgetInterface* InteractionWidgetInterface = Cast<IInteractionWidgetInterface>(InteractionDescriptor->InteractionWidget))
@@ -69,10 +69,12 @@ void UInteractionManagerComponent::HoldInteractProgress()
 {
 	HoldTimerProgress += HoldTimerRate;
 
-	OnHoldProgress.Broadcast(FMath::Clamp(HoldTimerProgress, 0.f, 1.f));
+	const float Percentage = HoldTimerProgress / HoldTimerDuration;
+	OnHoldProgress.Broadcast(FMath::Clamp(Percentage, 0.f, 1.f));
 	
-	if (HoldTimerProgress >= HoldTimerDuration)
+	if (FMath::IsNearlyEqual(Percentage, 1.f, 0.01f))
 	{
-		EndHoldInteract();
+		OnHoldCompleted.Broadcast();
+		GetWorldTimerManager().ClearTimer(HoldTimerHandle);
 	}
 }

@@ -62,7 +62,7 @@ void UInventoryManagerComponent::ReadyForReplication()
 	}
 }
 
-TArray<UInventoryItemInstance*> UInventoryManagerComponent::GetItems() const
+TArray<UInventoryItemInstance*> UInventoryManagerComponent::GetItems(const bool bSort) const
 {
 	TArray<UInventoryItemInstance*> Items;
 	Items.Reserve(InventoryList.Items.Num());
@@ -72,6 +72,14 @@ TArray<UInventoryItemInstance*> UInventoryManagerComponent::GetItems() const
 		Items.Add(InventoryList.Items[Index].ItemInstance);
 	}
 
+	if (bSort)
+	{
+		Items.Sort([](const UInventoryItemInstance& A, const UInventoryItemInstance& B)
+		{
+			return A.ItemSlot < B.ItemSlot;
+		});
+	}
+	
 	return Items;
 }
 
@@ -159,13 +167,16 @@ void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implemen
 	}
 }
 
-void UInventoryManagerComponent::AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
+UInventoryItemInstance* UInventoryManagerComponent::AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
 {
 	FAddItemResult Result = InventoryList.CreateNewItem(InventoryList.MakeAddOrNewItemRequest(ItemDef), ItemCount);
 	if (Result.bSuccess)
 	{
-		ReplicateNewItemInstance(Result.Instance.Get());
+		UInventoryItemInstance* ItemInstance = Result.Instance.Get();
+		ReplicateNewItemInstance(ItemInstance);
+		return ItemInstance;
 	}
+	return nullptr;
 }
 
 void UInventoryManagerComponent::GetItemDefInventoryStack(const TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const

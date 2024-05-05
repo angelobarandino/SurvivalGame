@@ -26,16 +26,6 @@ void AItemPickupContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	DOREPLIFETIME(ThisClass, NetGUID);
 }
 
-void AItemPickupContainer::OnConstruction(const FTransform& Transform)
-{
-	Super::OnConstruction(Transform);
-}
-
-void AItemPickupContainer::PostInitializeComponents()
-{
-	Super::PostInitializeComponents();
-}
-
 void AItemPickupContainer::BeginPlay()
 {
 	Super::BeginPlay();
@@ -53,16 +43,39 @@ void AItemPickupContainer::BeginPlay()
 	}
 }
 
-TArray<FPickupItemEntry> AItemPickupContainer::GetPickupItems() const
+TArray<FPickupItemEntry> AItemPickupContainer::GetPickupItems()
 {
-	return Pickups.Items;
+	TArray<FPickupItemEntry> PickupItems;
+	TArray<UInventoryItemInstance*> Items = InventoryManager->GetItems(true);
+	for (const UInventoryItemInstance* ItemInstance : Items)
+	{
+		FPickupItemEntry& Entry = PickupItems.AddDefaulted_GetRef();
+		Entry.ItemDef = ItemInstance->GetItemDef();
+		Entry.ItemStack = ItemInstance->GetItemCount();
+		Entry.ItemSlot = ItemInstance->GetItemSlot();
+		Entry.ItemInstanceRef = ItemInstance;
+	}
+
+	Pickups.Items = PickupItems;
+	return PickupItems;
 }
 
-bool AItemPickupContainer::OnPickupAddedToInventory(const TMap<FGuid, FAddInventoryItemResult> PickupResultMap, const APlayerController* PickupInstigator)
+bool AItemPickupContainer::OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator)
 {
-	for (const auto& Result : PickupResultMap)
+	for (auto& AddItemResult : PickupItemHandle.AddItemResults)
 	{
-		Pickups.UpdateItemCount(Result.Key, Result.Value.RemainingStack);
+		for (auto PickupItemEntryIt = Pickups.Items.CreateIterator(); PickupItemEntryIt; ++PickupItemEntryIt)
+		{
+			FPickupItemEntry& PickupItemEntry = *PickupItemEntryIt;
+			if (AddItemResult.Key == PickupItemEntry.InstanceId)
+			{
+				if (AddItemResult.Value.Result == EAddItemResult::Success)
+				{
+					InventoryManager->RemoveInventoryItem(PickupItemEntry.ItemInstanceRef.Get());
+					PickupItemEntryIt.RemoveCurrent();
+				}
+			}
+		}
 	}
 	
 	FlushNetDormancy();
