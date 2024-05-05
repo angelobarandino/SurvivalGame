@@ -153,7 +153,7 @@ void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implemen
 
 			if (Result.bSuccess)
 			{
-				SourceInventory->RemoveInventoryItem(SourceItemInstance);
+				SourceInventory->InventoryList.RemoveItemStack(SourceItemInstance, Result.ItemsAdded);
 			}
 		}
 	}
