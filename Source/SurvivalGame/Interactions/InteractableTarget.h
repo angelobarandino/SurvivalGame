@@ -7,8 +7,7 @@
 #include "UObject/Interface.h"
 #include "InteractableTarget.generated.h"
 
-// This class does not need to be modified.
-UINTERFACE()
+UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
 class UInteractableTarget : public UInterface
 {
 	GENERATED_BODY()
@@ -28,5 +27,7 @@ public:
 	virtual void HighlightActor() = 0;
 	virtual void GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions) = 0;
 	virtual void GetInteractionDefinition(FInteractionDefinition& InteractionDefinition) = 0;
-	
+
+	UFUNCTION(BlueprintCallable)
+	virtual const FText GetInteractableName() const = 0;
 };

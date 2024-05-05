@@ -42,3 +42,8 @@ void AInteractableActor::GetInteractionDefinition(FInteractionDefinition& Intera
 		Option.InteractableTarget = this;
 	}
 }
+
+const FText AInteractableActor::GetInteractableName() const
+{
+	return FText::FromString(InteractableObjectName.ToString());
+}

@@ -30,7 +30,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interaction Statics")
 	static TScriptInterface<IInteractableTarget> GetActiveInteractableTarget(const APawn* Pawn);
 
-	UFUNCTION(BlueprintCallable, Category = "Interaction Statics")
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Interaction Statics")
 	static AActor* GetActorFromInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableTarget);
 
 	UFUNCTION(BlueprintCallable, Category = "Interaction Statics")

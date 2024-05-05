@@ -20,6 +20,9 @@ public:
 	virtual void UnHighlightActor() override;
 	virtual void GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions) override;
 	virtual void GetInteractionDefinition(FInteractionDefinition& InteractionDefinition) override;
+	
+	UFUNCTION(BlueprintCallable)
+	virtual const FText GetInteractableName() const override;
 	// ~ End IInteractableTarget
 
 	

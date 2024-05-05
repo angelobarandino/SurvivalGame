@@ -43,3 +43,8 @@ void UInteractableComponent::GetInteractionDefinition(FInteractionDefinition& In
 	}
 }
 
+const FText UInteractableComponent::GetInteractableName() const
+{
+	return FText::FromString(InteractableObjectName.ToString());
+}
+
