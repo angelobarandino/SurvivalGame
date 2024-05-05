@@ -21,13 +21,16 @@ public:
 	virtual void UnHighlightActor() override;
 	virtual void GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions) override;
 	virtual void GetInteractionDefinition(FInteractionDefinition& InteractionDefinition) override;
-
-	UFUNCTION(BlueprintCallable)
 	virtual const FText GetInteractableName() const override;
 	// ~End IInteractableTarget
-
+	
 protected:
-
+	UFUNCTION(BlueprintImplementableEvent, Category = "Interaction")
+	void OnInteractionActive();
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Interaction")
+	void OnInteractionInactive();
+	
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	FName InteractableObjectName;
 
@@ -36,5 +39,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	TArray<FInteractOption> InteractOptions;
-	
+
+private:
+	int32 ActiveInteractingActorCount;
 };

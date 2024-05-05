@@ -13,12 +13,23 @@ AInteractableActor::AInteractableActor(const FObjectInitializer& ObjectInitializ
 
 void AInteractableActor::HighlightActor()
 {
+	ActiveInteractingActorCount++;
+
 	UInteractionStatics::SetActorHighlightEnable(this, true);
+
+	OnInteractionActive();
 }
 
 void AInteractableActor::UnHighlightActor()
 {
-	UInteractionStatics::SetActorHighlightEnable(this, false);
+	ActiveInteractingActorCount--;
+
+	if (ActiveInteractingActorCount <= 0)
+	{
+		ActiveInteractingActorCount = 0;
+		UInteractionStatics::SetActorHighlightEnable(this, false);
+		OnInteractionInactive();
+	}
 }
 
 void AInteractableActor::GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions)

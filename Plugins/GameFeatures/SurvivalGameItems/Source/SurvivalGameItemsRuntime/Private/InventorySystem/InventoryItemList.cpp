@@ -87,7 +87,9 @@ void FInventoryItemList::MarkItemDirtyAndBroadcastChange(FInventoryItemEntry& En
 {
 	MarkItemDirty(Entry);
 
-	if (OwnerInventory->GetOwner()->HasAuthority())
+	AActor* OwnerActor = OwnerInventory->GetOwner();
+
+	if (OwnerActor->HasAuthority())
 	{
 		BroadcastItemsChangeMessage(Entry, Entry.ItemCount, Entry.ItemInstance->ItemSlot);
 		Entry.LastObserveItemCount = Entry.ItemCount;
@@ -216,26 +218,29 @@ FAddItemResult FInventoryItemList::CreateNewItem(const FAddInventoryItemRequest&
 	check(OwnerInventory);
 	check(ItemRequest.ItemDef);
 
-	AActor* OwningActor = OwnerInventory->GetOwner();
-	check(OwningActor->HasAuthority());
-
-	const int32 ItemsToAdd = CalculateItemsCanAddToStack(ItemRequest.SlotMaxStack, ItemRequest.SlotCurrentItems, ItemCount);
-
-	UInventoryItemInstance* ItemInstance = NewObject<UInventoryItemInstance>(OwningActor);
-	ItemInstance->ItemCount = ItemsToAdd;
-	ItemInstance->ItemDef = ItemRequest.ItemDef;
-	ItemInstance->ItemSlot = ItemRequest.Slot;
-
-	FInventoryItemEntry& NewItem = Items.AddDefaulted_GetRef();
-	NewItem.ItemInstance = ItemInstance;
-	NewItem.ItemCount = ItemsToAdd;
-	
-	MarkItemDirtyAndBroadcastChange(NewItem);
-	
 	FAddItemResult Result;
-	Result.bSuccess = true;
-	Result.Instance = ItemInstance;
-	Result.ItemsAdded = ItemsToAdd;
+
+	AActor* OwningActor = OwnerInventory->GetOwner();
+	if (OwningActor->HasAuthority())
+	{
+		const int32 ItemsToAdd = CalculateItemsCanAddToStack(ItemRequest.SlotMaxStack, ItemRequest.SlotCurrentItems, ItemCount);
+
+		UInventoryItemInstance* ItemInstance = NewObject<UInventoryItemInstance>(OwningActor);
+		ItemInstance->ItemCount = ItemsToAdd;
+		ItemInstance->ItemDef = ItemRequest.ItemDef;
+		ItemInstance->ItemSlot = ItemRequest.Slot;
+
+		FInventoryItemEntry& NewItem = Items.AddDefaulted_GetRef();
+		NewItem.ItemInstance = ItemInstance;
+		NewItem.ItemCount = ItemsToAdd;
+		
+		MarkItemDirtyAndBroadcastChange(NewItem);
+		
+		Result.bSuccess = true;
+		Result.Instance = ItemInstance;
+		Result.ItemsAdded = ItemsToAdd;
+	}
+
 	return Result;
 }
 

@@ -11,7 +11,9 @@
 AItemPickupContainer::AItemPickupContainer(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	bReplicates = true;
-	NetUpdateFrequency = 5.f;
+	NetUpdateFrequency = 15.f;
+	MinNetUpdateFrequency = 5.f;
+	NetCullDistanceSquared = 1000000;
 	NetDormancy = DORM_Initial;
 
 	InventoryManager = CreateDefaultSubobject<UInventoryManagerComponent>("InventoryManagerComponent");
@@ -29,6 +31,11 @@ void AItemPickupContainer::OnConstruction(const FTransform& Transform)
 	Super::OnConstruction(Transform);
 }
 
+void AItemPickupContainer::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+}
+
 void AItemPickupContainer::BeginPlay()
 {
 	Super::BeginPlay();
@@ -43,8 +50,6 @@ void AItemPickupContainer::BeginPlay()
 		{
 			InventoryManager->AddInitialInventoryItem(PickupItem.ItemDef, PickupItem.ItemStack);
 		}
-		
-		ForceNetUpdate();
 	}
 }
 

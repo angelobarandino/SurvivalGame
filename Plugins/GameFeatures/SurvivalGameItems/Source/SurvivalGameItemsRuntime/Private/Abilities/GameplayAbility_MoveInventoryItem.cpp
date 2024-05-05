@@ -46,7 +46,7 @@ void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* PlayerA
 					if (UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>())
 					{
 						SourceInventory->MoveInventoryItem(Data->SourceSlot, Data->TargetSlot);
-						SourceActor->ForceNetUpdate();
+						//SourceActor->FlushNetDormancy();
 					}
 				}
 			}
@@ -55,26 +55,28 @@ void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* PlayerA
 		// If Player and Source guid is valid, then we're moving an item from external inventory to player's inventory
 		else if (Data->bPlayerInventory && Data->SourceActorNetGUID.IsValid())
 		{
-			if (const AActor* SourceActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->SourceActorNetGUID))
+			if (AActor* SourceActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->SourceActorNetGUID))
 			{
 				UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
 				UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>();
 				check(PlayerInventory && SourceInventory);
 
 				PlayerInventory->Server_AddInventoryItemFromOtherSource(Data->TargetSlot, Data->SourceSlot, SourceInventory);
+				//SourceActor->FlushNetDormancy();
 			}
 		}
 
 		// if Player and Target guid is valid, then we're moving an item from player's inventory to external inventory
 		else if (Data->bPlayerInventory && Data->TargetActorNetGUID.IsValid())
 		{
-			if (const AActor* TargetActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->TargetActorNetGUID))
+			if (AActor* TargetActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->TargetActorNetGUID))
 			{
 				UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
 				UInventoryManagerComponent* TargetInventory = TargetActor->FindComponentByClass<UInventoryManagerComponent>();
 				check(PlayerInventory && TargetInventory);
 
 				TargetInventory->Server_AddInventoryItemFromOtherSource(Data->TargetSlot, Data->SourceSlot, PlayerInventory);
+				//TargetActor->FlushNetDormancy();
 			}
 		}
 
