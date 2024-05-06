@@ -51,16 +51,6 @@ void UInventoryItemSlotWidget::ClearInventorySlotItemInstance()
 	ItemInstance = nullptr;
 }
 
-void UInventoryItemSlotWidget::ReleaseSlateResources(bool bReleaseChildren)
-{
-	Super::ReleaseSlateResources(bReleaseChildren);
-}
-
-void UInventoryItemSlotWidget::BeginDestroy()
-{
-	Super::BeginDestroy();
-}
-
 void UInventoryItemSlotWidget::SetInventoryItemTooltip()
 {
 	if (ItemInstance && ItemInstance->GetItemDef())

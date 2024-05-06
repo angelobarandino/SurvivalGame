@@ -75,10 +75,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftClassPtr<UInventoryItemTooltip> OverrideTooltipWidgetClass;
 
-	virtual void ReleaseSlateResources(bool bReleaseChildren) override;
-	
-	virtual void BeginDestroy() override;
-	
 protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void SetInventorySlotItem(TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
