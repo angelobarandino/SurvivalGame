@@ -61,7 +61,7 @@ public:
 	void ClearInventorySlotItemInstance();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ExposeOnSpawn))
-	TWeakObjectPtr<AActor> OwningActor = nullptr;
+	TObjectPtr<const AActor> OwningActor = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ExposeOnSpawn))
 	int32 SlotIndex = -1;
@@ -81,6 +81,12 @@ protected:
 	
 	UFUNCTION(BlueprintImplementableEvent)
 	void EmptyInventorySlot();
+
+	UFUNCTION(BlueprintCallable)
+	bool IsPlayerOwner() const
+	{
+		return OwningActor == GetOwningPlayer();
+	}
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item")
 	TSubclassOf<UInventoryItemDragPreview> DragPreviewWidgetClass;

@@ -3,12 +3,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CommonUserWidget.h"
+#include "CommonActivatableWidget.h"
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventoryItemTooltip.generated.h"
 
 UCLASS()
-class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemTooltip : public UCommonUserWidget
+class SURVIVALGAMEITEMSRUNTIME_API UInventoryItemTooltip : public UCommonActivatableWidget
 {
 	GENERATED_BODY()
 

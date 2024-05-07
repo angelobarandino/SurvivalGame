@@ -42,6 +42,9 @@ public:
 	UInventoryItemInstance* FindItemInstanceInSlot(const int32 Slot);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	int32 FindAvailableSlot();
+
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SetFocusedInventoryItemSlot(const int32 FocusedSlot)
 	{
 		Server_SetFocusedInventoryItemSlot(FocusedSlot);

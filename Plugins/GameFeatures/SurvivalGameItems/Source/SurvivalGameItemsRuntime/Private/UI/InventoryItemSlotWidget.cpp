@@ -9,6 +9,7 @@
 #include "NativeGameplayTags.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Components/PanelWidget.h"
+#include "Components/PawnItemManagerComponent.h"
 #include "Engine/AssetManager.h"
 #include "InventorySystem/InventoryItemDragDropOperation.h"
 #include "InventorySystem/InventoryItemInstance.h"
@@ -114,7 +115,7 @@ void UInventoryItemSlotWidget::NativeDestruct()
 	ItemInstance = nullptr;
 	
 	OwningInventoryManager.Reset();
-	OwningActor.Reset();
+	OwningActor = nullptr;
 }
 
 FReply UInventoryItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
@@ -129,9 +130,11 @@ FReply UInventoryItemSlotWidget::NativeOnMouseButtonDown(const FGeometry& InGeom
 
 void UInventoryItemSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent)
 {
+	Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+	
 	if (ItemInstance)
 	{
-		Super::NativeOnMouseEnter(InGeometry, InMouseEvent);
+		UPawnItemManagerStatics::SetFocusedInventoryItem(GetOwningPlayerPawn(), ItemInstance->GetItemSlot(), IsPlayerOwner());
 
 		if (OwningInventoryManager.IsValid() && bEnableSetFocusItem)
 		{
@@ -142,9 +145,11 @@ void UInventoryItemSlotWidget::NativeOnMouseEnter(const FGeometry& InGeometry, c
 
 void UInventoryItemSlotWidget::NativeOnMouseLeave(const FPointerEvent& InMouseEvent)
 {
+	Super::NativeOnMouseLeave(InMouseEvent);
+	
 	if (ItemInstance)
 	{
-		Super::NativeOnMouseLeave(InMouseEvent);
+		UPawnItemManagerStatics::SetFocusedInventoryItem(GetOwningPlayerPawn(), -1,  IsPlayerOwner());
 		
 		if (OwningInventoryManager.IsValid() && bEnableSetFocusItem)
 		{
@@ -192,9 +197,11 @@ void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry,
 bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
 {
 	Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
-
+	
 	if (const UInventoryItemDragDropOperation* Operation = Cast<UInventoryItemDragDropOperation>(InOperation))
 	{
+		UPawnItemManagerStatics::SetFocusedInventoryItem(GetOwningPlayerPawn(), SlotIndex,  IsPlayerOwner());
+		
 		if (ASGPlayerState* PlayerState = Cast<ASGPlayerState>(GetOwningPlayerState()))
 		{
 			FGuid SourceActorNetGUID = FGuid();
@@ -204,7 +211,7 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 			}
 
 			FGuid TargetActorNetGUID = FGuid();
-			if (const IPickupable* Pickupable = Cast<IPickupable>(OwningActor.Get()))
+			if (const IPickupable* Pickupable = Cast<IPickupable>(OwningActor))
 			{
 				TargetActorNetGUID = Pickupable->GetActorNetGUID();
 			}
@@ -220,7 +227,7 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 			Payload.EventTag = TAG_SurvivalGameItems_Inventory_MoveInventoryItem;
 			Payload.OptionalObject = MoveItemData;
 			Payload.Instigator = GetOwningPlayer();
-			Payload.Target = OwningActor.Get();
+			Payload.Target = OwningActor;
 
 			PlayerState->Server_ActivateActorAbilityByEvent(TAG_SurvivalGameItems_Inventory_MoveInventoryItem, Payload);
 			return true;

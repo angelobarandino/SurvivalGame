@@ -133,6 +133,21 @@ UInventoryItemInstance* UInventoryManagerComponent::FindItemInstanceInSlot(const
 	return nullptr;
 }
 
+int32 UInventoryManagerComponent::FindAvailableSlot()
+{
+	for (int SlotIndex = 0; SlotIndex < MaxInventorySize; ++SlotIndex)
+	{
+		if (InventoryList.GetInventoryItemAtSlot(SlotIndex))
+		{
+			continue;
+		}
+
+		return SlotIndex;
+	}
+
+	return -1;
+}
+
 void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implementation(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
 {
 	if (SourceInventory)

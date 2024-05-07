@@ -23,7 +23,11 @@ public class SurvivalGameItemsRuntime : ModuleRules
 			"Core",
 			"SurvivalGame",
 			"GameplayMessageRuntime",
-			"GameplayAbilities"
+			"GameplayAbilities",
+			"GameplayTags",
+			"GameplayTasks",
+			"CommonGame",
+			"CommonUI"
 		});
 		
 		PrivateDependencyModuleNames.AddRange(new string[]
@@ -35,9 +39,6 @@ public class SurvivalGameItemsRuntime : ModuleRules
 			"Slate",
 			"SlateCore",
 			"UMG",
-			"GameplayTags",
-			"CommonGame",
-			"CommonUI"
 		});
 		
 		DynamicallyLoadedModuleNames.AddRange(new string[]

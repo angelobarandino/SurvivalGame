@@ -26,7 +26,7 @@ class SURVIVALGAMEITEMSRUNTIME_API IPickupable
 public:
 	UFUNCTION(BlueprintCallable)
 	virtual TArray<FPickupItemEntry> GetPickupItems() = 0;
-
+	
 	UFUNCTION()
 	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) = 0;
 
@@ -49,6 +49,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, meta = (WorldContext = "Ability"))
 	static bool AddAllItemPickupToInventory(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup);
 
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, meta = (WorldContext = "Ability"))
+	static void TakeItem(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup, const int32 SlotIndex);
+	
 	template <class TPickupableActor>
 	static AActor* FindActorByNetGUID(UWorld* World, const FGuid ActorNetGUID);
 };

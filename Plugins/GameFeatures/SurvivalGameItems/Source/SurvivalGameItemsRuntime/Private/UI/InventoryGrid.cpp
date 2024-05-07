@@ -119,7 +119,7 @@ void UInventoryGrid::CreateInventorySlot(const TSubclassOf<UInventoryItemSlotWid
 				SlotWidget->OverrideTooltipWidgetClass = TooltipWidgetClass;
 
 				SlotWidget->InventoryGrid = this;
-				SlotWidget->OwningActor = OwningActor;
+				SlotWidget->OwningActor = OwningActor.Get();
 				SlotWidget->OwningInventoryManager = OwningInventoryManager;
 				SlotWidget->SetInventorySlotItemInstance(OwningInventoryManager->FindItemInstanceInSlot(SlotIndex));
 				InventorySlots.Add(SlotWidget);

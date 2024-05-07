@@ -48,4 +48,9 @@ struct FPickupItemHandle
 	GENERATED_BODY()
 
 	TMap<FGuid, FAddInventoryItemResult> AddItemResults;
+
+	void AddResult(const FGuid& InstanceId, const FAddInventoryItemResult& Result)
+	{
+		AddItemResults.Add(InstanceId, Result);
+	}
 };
