@@ -60,7 +60,7 @@ void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* PlayerA
 				UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>();
 				check(PlayerInventory && SourceInventory);
 
-				PlayerInventory->Server_AddInventoryItemFromOtherSource(Data->TargetSlot, Data->SourceSlot, SourceInventory);
+				PlayerInventory->Server_AddInventoryItemFromOtherSourceWithTargetSlot(Data->TargetSlot, Data->SourceSlot, SourceInventory);
 			}
 		}
 
@@ -73,7 +73,7 @@ void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* PlayerA
 				UInventoryManagerComponent* TargetInventory = TargetActor->FindComponentByClass<UInventoryManagerComponent>();
 				check(PlayerInventory && TargetInventory);
 
-				TargetInventory->Server_AddInventoryItemFromOtherSource(Data->TargetSlot, Data->SourceSlot, PlayerInventory);
+				TargetInventory->Server_AddInventoryItemFromOtherSourceWithTargetSlot(Data->TargetSlot, Data->SourceSlot, PlayerInventory);
 			}
 		}
 

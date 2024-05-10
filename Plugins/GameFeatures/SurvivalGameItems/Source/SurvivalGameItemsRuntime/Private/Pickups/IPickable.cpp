@@ -6,6 +6,11 @@
 #include "Pickups/PickupItemCollection.h"
 
 
+UInventoryManagerComponent* IPickupable::GetInventoryManagerComponent()
+{
+	return nullptr;
+}
+
 TScriptInterface<IPickupable> UPickupableStatics::GetPickupableFromActor(AActor* Actor)
 {
 	const TScriptInterface<IPickupable> PickupableActor(Actor);
@@ -30,6 +35,22 @@ void UPickupableStatics::SpawnItemPickupFromItemInstance(const TSubclassOf<AItem
 		ItemPickup->SetNetDormancy(DORM_DormantAll);
 		ItemPickup->SetPickupItem(ItemInstance->GetItemDef(), ItemInstance->GetItemCount());
 		ItemPickup->FinishSpawning(Transform);
+	}
+}
+
+void UPickupableStatics::AddItemFromPlayerInventory(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup, const int32 SourceSlotIndex)
+{
+	if (PlayerController == nullptr || Pickup.GetObject() == nullptr)
+	{
+		return;
+	}
+
+	if (UInventoryManagerComponent* PlayerInventory = PlayerController->FindComponentByClass<UInventoryManagerComponent>())
+	{
+		if (UInventoryManagerComponent* PickupableInventory = Pickup->GetInventoryManagerComponent())
+		{
+			PickupableInventory->AddInventoryItemFromOtherSource(SourceSlotIndex, PlayerInventory);
+		}
 	}
 }
 

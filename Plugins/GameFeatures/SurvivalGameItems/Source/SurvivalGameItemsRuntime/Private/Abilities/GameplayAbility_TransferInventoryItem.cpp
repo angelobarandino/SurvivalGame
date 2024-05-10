@@ -6,6 +6,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Components/PawnItemManagerComponent.h"
 #include "InventorySystem/InventoryManagerComponent.h"
+#include "Pickups/IPickupable.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(GameplayAbility_TransferInventoryItem)
 
@@ -30,8 +31,8 @@ void UGameplayAbility_TransferInventoryItem::OnReleaseInput(float TimeHeld)
 			const FInventoryFocusedItem& FocusedItem = UPawnItemManagerStatics::GetFocusedInventoryItem(GetPawnFromAvatarInfo());
 			if (FocusedItem.HasValidFocused())
 			{
-				const AActor* PlayerActor = GetPlayerControllerFromActorInfo();
-				const AActor* TargetActor = GetActorFromInteractableTarget();
+				AActor* PlayerActor = GetPlayerControllerFromActorInfo();
+				AActor* TargetActor = GetActorFromInteractableTarget();
 				
 				if (PlayerActor && TargetActor)
 				{
@@ -39,13 +40,21 @@ void UGameplayAbility_TransferInventoryItem::OnReleaseInput(float TimeHeld)
 					UInventoryManagerComponent* TargetInventory =TargetActor->FindComponentByClass<UInventoryManagerComponent>();
 					check(PlayerInventory && TargetInventory);
 
+					// if we are hovering on an item in players inventory, then we add to target pickupable actor
 					if (FocusedItem.bIsPlayer)
 					{
-						TargetInventory->Server_AddInventoryItemFromOtherSource(TargetInventory->FindAvailableSlot(), FocusedItem.ItemSlot, PlayerInventory);
+						TargetInventory->AddInventoryItemFromOtherSource(FocusedItem.ItemSlot, PlayerInventory);
 					}
+					
+					// if we are hovering on an item in a pickupable actor, then we add it to players inventory
 					else
 					{
-						PlayerInventory->Server_AddInventoryItemFromOtherSource(PlayerInventory->FindAvailableSlot(), FocusedItem.ItemSlot, TargetInventory);
+						PlayerInventory->AddInventoryItemFromOtherSource(FocusedItem.ItemSlot, TargetInventory);
+						
+						if (IPickupable* PickupableTargetActor = Cast<IPickupable>(TargetActor))
+						{
+							PickupableTargetActor->TryDestroyPickupable();
+						}
 					}
 				}
 			}

@@ -60,6 +60,16 @@ TArray<FPickupItemEntry> AItemPickupContainer::GetPickupItems()
 	return PickupItems;
 }
 
+bool AItemPickupContainer::TryDestroyPickupable()
+{
+	if (InventoryManager->GetItems().Num() == 0 && bDestroyOnPickup)
+	{
+		Destroy(true, true);
+		return true;
+	}
+	return false;
+}
+
 bool AItemPickupContainer::OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator)
 {
 	for (auto& AddItemResult : PickupItemHandle.AddItemResults)
@@ -80,12 +90,5 @@ bool AItemPickupContainer::OnPickupAddedToInventory(const FPickupItemHandle& Pic
 	
 	FlushNetDormancy();
 
-	const bool bCanBeDestroyed = Pickups.Items.Num() == 0 && bDestroyOnPickup;
-
-	if (bCanBeDestroyed)
-	{
-		Destroy(true, true);
-	}
-
-	return bCanBeDestroyed;
+	return TryDestroyPickupable();
 }

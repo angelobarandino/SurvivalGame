@@ -148,11 +148,36 @@ int32 UInventoryManagerComponent::FindAvailableSlot()
 	return -1;
 }
 
-void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implementation(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
+void UInventoryManagerComponent::AddInventoryItemFromOtherSource(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
+{
+	Server_AddInventoryItemFromOtherSource(SourceSlot, SourceInventory);
+}
+
+void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implementation(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
 {
 	if (SourceInventory)
 	{
-		if (UInventoryItemInstance* SourceItemInstance = SourceInventory->FindItemInstanceInSlot(SourceSlot))
+		if (const UInventoryItemInstance* SourceItemInstance = SourceInventory->FindItemInstanceInSlot(SourceSlot))
+		{
+			const int32 SourceItemCount = SourceItemInstance->GetItemCount();
+			const FAddInventoryItemResult& AddItemResult = AddInventorItem(
+				SourceItemInstance->GetItemDef(), SourceItemCount);
+			
+			if (AddItemResult.Result != EAddItemResult::Failed)
+			{
+				const int32 ItemsAdded = SourceItemCount - AddItemResult.RemainingStack;
+				
+				SourceInventory->InventoryList.RemoveItemStack(SourceItemInstance, ItemsAdded);
+			}
+		}
+	}
+}
+
+void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSourceWithTargetSlot_Implementation(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
+{
+	if (SourceInventory)
+	{
+		if (const UInventoryItemInstance* SourceItemInstance = SourceInventory->FindItemInstanceInSlot(SourceSlot))
 		{
 			const FAddInventoryItemRequest& Request = InventoryList.MakeAddItemRequestToSlot(TargetSlot, SourceItemInstance->GetItemDef());
 			if (Request.Result == EFindItemSlotResult::Invalid)

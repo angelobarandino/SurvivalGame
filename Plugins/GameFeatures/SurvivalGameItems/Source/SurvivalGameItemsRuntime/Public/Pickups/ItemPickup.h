@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "IPickupable.h"
 #include "PickupItemCollection.h"
-#include "GameFramework/Actor.h"
 #include "SurvivalGame/Interactions/InteractableActor.h"
 #include "ItemPickup.generated.h"
 
@@ -33,6 +32,7 @@ public:
 
 	// ~Start IPickupable
 	virtual TArray<FPickupItemEntry> GetPickupItems() override;
+	virtual bool TryDestroyPickupable() override;
 	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) override;
 	// ~End IPickupable
 
@@ -51,4 +51,5 @@ protected:
 
 private:
 	void SetPickupObjectMesh();
+
 };

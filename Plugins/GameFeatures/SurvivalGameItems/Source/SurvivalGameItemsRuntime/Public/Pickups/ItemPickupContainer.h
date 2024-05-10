@@ -26,8 +26,10 @@ protected:
 public:
 	// ~Start IPickupable
 	virtual TArray<FPickupItemEntry> GetPickupItems() override;
+	virtual bool TryDestroyPickupable() override;
 	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) override;
 	virtual FGuid GetActorNetGUID() const override { return NetGUID; }
+	virtual UInventoryManagerComponent* GetInventoryManagerComponent() override { return InventoryManager; }
 	// ~End IPickupable
 
 	UPROPERTY(EditInstanceOnly, BlueprintReadOnly, Category = "Item Pickup")
@@ -37,7 +39,7 @@ public:
 	FPickupItemCollection Pickups;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (ExposeOnSpawn))
-	int32 MaxInventorySize = 15;
+	int32 MaxInventorySize = 25;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

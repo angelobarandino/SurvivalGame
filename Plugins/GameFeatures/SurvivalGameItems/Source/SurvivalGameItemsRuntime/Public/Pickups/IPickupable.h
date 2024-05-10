@@ -8,6 +8,7 @@
 
 class AItemPickup;
 class UInventoryItemInstance;
+class UInventoryManagerComponent;
 class UItemDefinition;
 struct FAddInventoryItemResult;
 struct FPickupItemEntry;
@@ -24,9 +25,15 @@ class SURVIVALGAMEITEMSRUNTIME_API IPickupable
 	GENERATED_BODY()
 
 public:
+	
+	virtual UInventoryManagerComponent* GetInventoryManagerComponent();
+	
 	UFUNCTION(BlueprintCallable)
 	virtual TArray<FPickupItemEntry> GetPickupItems() = 0;
-	
+
+	UFUNCTION(BlueprintCallable)
+	virtual bool TryDestroyPickupable() = 0;
+
 	UFUNCTION()
 	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) = 0;
 
@@ -45,13 +52,17 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	static void SpawnItemPickupFromItemInstance(const TSubclassOf<AItemPickup> ItemPickupClass, APawn* OwnerPawn, const UInventoryItemInstance* ItemInstance, const FTransform& Transform);
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
+	static void AddItemFromPlayerInventory(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup, const int32 SourceSlotIndex);
+
 	
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, meta = (WorldContext = "Ability"))
 	static bool AddAllItemPickupToInventory(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup);
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, meta = (WorldContext = "Ability"))
 	static void TakeItem(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup, const int32 SlotIndex);
-	
+
 	template <class TPickupableActor>
 	static AActor* FindActorByNetGUID(UWorld* World, const FGuid ActorNetGUID);
 };
