@@ -20,5 +20,6 @@ public:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 
 	UFUNCTION(BlueprintCallable)
-	void MoveInventoryItem(const AActor* PlayerActor, const UObject* MoveItemObject);
+	void MoveInventoryItem(const FGameplayEventData& TriggerEventData);
+
 };

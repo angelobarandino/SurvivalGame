@@ -14,7 +14,7 @@
 #include "InventorySystem/InventoryItemDragDropOperation.h"
 #include "InventorySystem/InventoryItemInstance.h"
 #include "InventorySystem/InventoryManagerComponent.h"
-#include "Pickups/IPickupable.h"
+#include "Kismet/GameplayStatics.h"
 #include "SurvivalGame/Player/SGPlayerState.h"
 #include "UI/InventoryGrid.h"
 #include "UI/InventoryItemDragPreview.h"
@@ -179,6 +179,8 @@ void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry,
 
 	if (IsValid(ItemInstance) && OwningInventoryManager.IsValid() && bEnableDragAndDrop)
 	{
+		UGameplayStatics::PlaySound2D(GetOwningPlayer(), ItemDragSound);
+		
 		if (UUserWidget* PreviewWidget = CreateDragPreview())
 		{
 			if (UInventoryItemDragDropOperation* DragDropOperation = Cast<UInventoryItemDragDropOperation>(
@@ -200,28 +202,39 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 	
 	if (const UInventoryItemDragDropOperation* Operation = Cast<UInventoryItemDragDropOperation>(InOperation))
 	{
+		UGameplayStatics::PlaySound2D(GetOwningPlayer(), ItemDropSound);
+		
 		UPawnItemManagerStatics::SetFocusedInventoryItem(GetOwningPlayerPawn(), SlotIndex,  IsPlayerOwner());
 		
 		if (ASGPlayerState* PlayerState = Cast<ASGPlayerState>(GetOwningPlayerState()))
 		{
-			FGuid SourceActorNetGUID = FGuid();
-			if (const IPickupable* Pickupable = Cast<IPickupable>(Operation->SourceActor.Get()))
-			{
-				SourceActorNetGUID = Pickupable->GetActorNetGUID();
-			}
-
-			FGuid TargetActorNetGUID = FGuid();
-			if (const IPickupable* Pickupable = Cast<IPickupable>(OwningActor))
-			{
-				TargetActorNetGUID = Pickupable->GetActorNetGUID();
-			}
-			
 			UMoveInventoryItemPayload* MoveItemData = NewObject<UMoveInventoryItemPayload>();
-			MoveItemData->bPlayerInventory = GetOwningPlayer() == OwningActor || GetOwningPlayer() == Operation->SourceActor;
-			MoveItemData->SourceActorNetGUID = SourceActorNetGUID;
-			MoveItemData->TargetActorNetGUID = TargetActorNetGUID;
 			MoveItemData->SourceSlot = Operation->DraggedItemSlot;
 			MoveItemData->TargetSlot = SlotIndex;
+
+			// If dropping on same owner, and it is player's inventory
+			if (OwningActor == Operation->SourceActor && GetOwningPlayer() == Operation->SourceActor)
+			{
+				MoveItemData->MoveAction = EMoveItemActionType::Move_PlayerOnly;
+			}
+			
+			// If dropping on same owner, and it's not the players inventory
+			if (OwningActor == Operation->SourceActor && GetOwningPlayer() != Operation->SourceActor)
+			{
+				MoveItemData->MoveAction = EMoveItemActionType::Move_TargetOnly;
+			}
+
+			// If dropping on player inventory where the item is from other source
+			else if (OwningActor == GetOwningPlayer() && GetOwningPlayer() != Operation->SourceActor)
+			{
+				MoveItemData->MoveAction = EMoveItemActionType::Move_TargetToPlayer;
+			}
+
+			// If dropping an item on a non player inventory where the item is from the player
+			else if (OwningActor != GetOwningPlayer() && GetOwningPlayer() == Operation->SourceActor)
+			{
+				MoveItemData->MoveAction = EMoveItemActionType::Move_PlayerToTarget;
+			}
 			
 			FGameplayEventData Payload;
 			Payload.EventTag = TAG_SurvivalGameItems_Inventory_MoveInventoryItem;

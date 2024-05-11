@@ -148,12 +148,7 @@ int32 UInventoryManagerComponent::FindAvailableSlot()
 	return -1;
 }
 
-void UInventoryManagerComponent::AddInventoryItemFromOtherSource(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
-{
-	Server_AddInventoryItemFromOtherSource(SourceSlot, SourceInventory);
-}
-
-void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implementation(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
+bool UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
 {
 	if (SourceInventory)
 	{
@@ -168,12 +163,16 @@ void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource_Implemen
 				const int32 ItemsAdded = SourceItemCount - AddItemResult.RemainingStack;
 				
 				SourceInventory->InventoryList.RemoveItemStack(SourceItemInstance, ItemsAdded);
+				
+				return true;
 			}
 		}
 	}
+	
+	return false;
 }
 
-void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSourceWithTargetSlot_Implementation(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
+bool UInventoryManagerComponent::Server_AddInventoryItemFromOtherSourceWithTargetSlot(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
 {
 	if (SourceInventory)
 	{
@@ -182,7 +181,7 @@ void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSourceWithTarge
 			const FAddInventoryItemRequest& Request = InventoryList.MakeAddItemRequestToSlot(TargetSlot, SourceItemInstance->GetItemDef());
 			if (Request.Result == EFindItemSlotResult::Invalid)
 			{
-				return;
+				return false;
 			}
 
 			FAddItemResult Result;
@@ -202,9 +201,45 @@ void UInventoryManagerComponent::Server_AddInventoryItemFromOtherSourceWithTarge
 			if (Result.bSuccess)
 			{
 				SourceInventory->InventoryList.RemoveItemStack(SourceItemInstance, Result.ItemsAdded);
+				return true;
 			}
 		}
 	}
+
+	return false;
+}
+
+bool UInventoryManagerComponent::Server_MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot)
+{
+	if (CurrentSlot == NewSlot)
+	{
+		return false;
+	}
+	
+	if (FInventoryItemEntry* CurrentEntry = InventoryList.GetInventoryItemAtSlot(CurrentSlot))
+	{
+		if (const UInventoryItemInstance* CurrentItemInstance = CurrentEntry->ItemInstance)
+		{
+			const FAddInventoryItemRequest& MoveRequest = InventoryList.MakeAddItemRequestToSlot(NewSlot, CurrentItemInstance->GetItemDef());
+			
+			if (MoveRequest.Result == EFindItemSlotResult::ExistingItem)
+			{
+				const FAddItemResult ItemResult = InventoryList.AddItemToSlot(MoveRequest, CurrentEntry->ItemCount);
+				if (ItemResult.bSuccess)
+				{
+					InventoryList.RemoveItemStack(CurrentEntry->ItemInstance, ItemResult.ItemsAdded);
+					return true;
+				}
+			}
+			else if (MoveRequest.Result == EFindItemSlotResult::InsertNewItem)
+			{
+				InventoryList.MoveItemToSlot(*CurrentEntry, NewSlot);
+				return true;
+			}
+		}
+	}
+	
+	return false;
 }
 
 UInventoryItemInstance* UInventoryManagerComponent::AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
@@ -243,38 +278,4 @@ void UInventoryManagerComponent::ReplicateNewItemInstance(UInventoryItemInstance
 void UInventoryManagerComponent::Server_SetFocusedInventoryItemSlot_Implementation(const int32 FocusedSlot)
 {
 	FocusedInventoryItemSlot = FocusedSlot;
-}
-
-void UInventoryManagerComponent::Server_MoveInventorItem_Implementation(const int32 CurrentSlot, const int32 NewSlot)
-{
-	if (CurrentSlot == NewSlot)
-	{
-		return;
-	}
-	
-	if (FInventoryItemEntry* CurrentEntry = InventoryList.GetInventoryItemAtSlot(CurrentSlot))
-	{
-		if (const UInventoryItemInstance* CurrentItemInstance = CurrentEntry->ItemInstance)
-		{
-			const FAddInventoryItemRequest& MoveRequest = InventoryList.MakeAddItemRequestToSlot(NewSlot, CurrentItemInstance->GetItemDef());
-			
-			if (MoveRequest.Result == EFindItemSlotResult::ExistingItem)
-			{
-				const FAddItemResult ItemResult = InventoryList.AddItemToSlot(MoveRequest, CurrentEntry->ItemCount);
-				if (ItemResult.bSuccess)
-				{
-					InventoryList.RemoveItemStack(CurrentEntry->ItemInstance, ItemResult.ItemsAdded);
-				}
-			}
-			else if (MoveRequest.Result == EFindItemSlotResult::InsertNewItem)
-			{
-				InventoryList.MoveItemToSlot(*CurrentEntry, NewSlot);
-			}
-		}
-	}
-}
-
-bool UInventoryManagerComponent::Server_MoveInventorItem_Validate(const int32 CurrentSlot, const int32 NewSlot)
-{
-	return CurrentSlot != NewSlot;
 }

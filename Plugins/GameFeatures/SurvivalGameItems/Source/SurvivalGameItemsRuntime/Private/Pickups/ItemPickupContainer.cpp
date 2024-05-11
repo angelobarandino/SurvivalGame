@@ -5,7 +5,6 @@
 
 #include "InventorySystem/InventoryManagerComponent.h"
 #include "InventorySystem/InventoryTypes.h"
-#include "Net/UnrealNetwork.h"
 
 
 AItemPickupContainer::AItemPickupContainer(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -22,8 +21,6 @@ AItemPickupContainer::AItemPickupContainer(const FObjectInitializer& ObjectIniti
 void AItemPickupContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ThisClass, NetGUID);
 }
 
 void AItemPickupContainer::BeginPlay()
@@ -32,8 +29,6 @@ void AItemPickupContainer::BeginPlay()
 
 	if (HasAuthority())
 	{
-		NetGUID = FGuid::NewGuid();
-		
 		InventoryManager->MaxInventorySize = MaxInventorySize;
 
 		for (const FPickupItemEntry& PickupItem : Pickups.Items)

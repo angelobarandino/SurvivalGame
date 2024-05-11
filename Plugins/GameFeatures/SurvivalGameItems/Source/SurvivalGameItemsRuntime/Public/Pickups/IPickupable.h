@@ -2,7 +2,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "EngineUtils.h"
 #include "UObject/Interface.h"
 #include "IPickupable.generated.h"
 
@@ -36,8 +35,6 @@ public:
 
 	UFUNCTION()
 	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) = 0;
-
-	virtual FGuid GetActorNetGUID() const { return FGuid(); }
 };
 
 UCLASS()
@@ -55,43 +52,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly)
 	static void AddItemFromPlayerInventory(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup, const int32 SourceSlotIndex);
-
 	
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, meta = (WorldContext = "Ability"))
 	static bool AddAllItemPickupToInventory(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup);
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, meta = (WorldContext = "Ability"))
-	static void TakeItem(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup, const int32 SlotIndex);
-
-	template <class TPickupableActor>
-	static AActor* FindActorByNetGUID(UWorld* World, const FGuid ActorNetGUID);
 };
-
-template <class TPickupableActor>
-AActor* UPickupableStatics::FindActorByNetGUID(UWorld* World, const FGuid ActorNetGUID)
-{
-	if (!World)
-	{
-		return nullptr;
-	}
-
-	for (TActorIterator<TPickupableActor> ActorItr(World); ActorItr; ++ActorItr)
-	{
-		if (TPickupableActor* CurrentActor = *ActorItr)
-		{
-			if (IPickupable* Pickupable = Cast<IPickupable>(CurrentActor))
-			{
-				const FGuid CurrentActorNetGUID = Pickupable->GetActorNetGUID();
-
-				if (CurrentActorNetGUID == ActorNetGUID)
-				{
-					// Return the actor if found
-					return Cast<AActor>(CurrentActor);
-				}
-			}
-		}
-	}
-
-	// Return nullptr if no actor with the desired NetGUID is found
-	return nullptr;
-}

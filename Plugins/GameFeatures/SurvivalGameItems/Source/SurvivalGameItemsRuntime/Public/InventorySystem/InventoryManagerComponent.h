@@ -55,18 +55,17 @@ public:
 	{
 		return FindItemInstanceInSlot(FocusedInventoryItemSlot);
 	}
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	void AddInventoryItemFromOtherSource(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory);
-
-	UFUNCTION(Server, Reliable)
-	void Server_AddInventoryItemFromOtherSource(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory);
-
-	UFUNCTION(Server, Reliable)
-	void Server_AddInventoryItemFromOtherSourceWithTargetSlot(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory);
 	
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
+	bool Server_AddInventoryItemFromOtherSource(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory);
+
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
+	bool Server_AddInventoryItemFromOtherSourceWithTargetSlot(const int32 TargetSlot, const int32 SourceSlot, UInventoryManagerComponent* SourceInventory);
+	
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
+	bool Server_MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot);
+
 public:
-	
 	UInventoryItemInstance* AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
 	
 	void GetItemDefInventoryStack(TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const;
@@ -86,7 +85,5 @@ private:
 	UFUNCTION(Server, Reliable)
 	void Server_SetFocusedInventoryItemSlot(const int32 FocusedSlot);
 
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot);
 	
 };

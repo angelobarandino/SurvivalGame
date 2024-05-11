@@ -53,24 +53,6 @@ bool UInteractionStatics::FindNearestIntractableTargetFromOverlapResults(const T
 	return false;
 }
 
-AActor* UInteractionStatics::GetActorFromInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableTarget)
-{
-	if (UObject* InteractableObjectRef = InteractableTarget.GetObject())
-	{
-		if (AActor* Actor = Cast<AActor>(InteractableObjectRef))
-		{
-			return Actor;
-		}
-
-		if (const UActorComponent* ActorComponent = Cast<UActorComponent>(InteractableObjectRef))
-		{
-			return ActorComponent->GetOwner();
-		}
-	}
-
-	return nullptr;
-}
-
 FVector UInteractionStatics::GetInteractableActorWorldLocation(const TScriptInterface<IInteractableTarget>& InteractableTarget)
 {
 	if (UObject* InteractableObjectRef = InteractableTarget.GetObject())
@@ -108,6 +90,19 @@ void UInteractionStatics::SetInteractOptionData(FInteractOption& InteractOption)
 	}
 }
 
+AActor* UInteractionStatics::GetCurrentInteractingActor(const APawn* Pawn)
+{
+	if (Pawn)
+	{
+		if (const UInteractableScannerComponent* InteractableScanner = Pawn->FindComponentByClass<UInteractableScannerComponent>())
+		{
+			return GetActorFromInteractableTarget(InteractableScanner->GetActiveInteractableTarget());
+		}
+	}
+
+	return nullptr;
+}
+
 TScriptInterface<IInteractableTarget> UInteractionStatics::GetActiveInteractableTarget(const APawn* Pawn)
 {
 	if (Pawn)
@@ -119,6 +114,24 @@ TScriptInterface<IInteractableTarget> UInteractionStatics::GetActiveInteractable
 	}
 
 	return TScriptInterface<IInteractableTarget>();
+}
+
+AActor* UInteractionStatics::GetActorFromInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableTarget)
+{
+	if (UObject* InteractableObjectRef = InteractableTarget.GetObject())
+	{
+		if (AActor* Actor = Cast<AActor>(InteractableObjectRef))
+		{
+			return Actor;
+		}
+
+		if (const UActorComponent* ActorComponent = Cast<UActorComponent>(InteractableObjectRef))
+		{
+			return ActorComponent->GetOwner();
+		}
+	}
+
+	return nullptr;
 }
 
 void UInteractionStatics::PushContentToInteractionPrompt(APlayerController* PlayerController, const TSubclassOf<UCommonActivatableWidget> WidgetClass, const UObject* ContentData)

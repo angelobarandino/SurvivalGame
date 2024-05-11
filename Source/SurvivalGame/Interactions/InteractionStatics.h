@@ -27,6 +27,9 @@ public:
 
 	static void SetInteractOptionData(FInteractOption& InteractOption);
 
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Interaction Statics")
+	static AActor* GetCurrentInteractingActor(const APawn* Pawn);
+	
 	UFUNCTION(BlueprintCallable, Category = "Interaction Statics")
 	static TScriptInterface<IInteractableTarget> GetActiveInteractableTarget(const APawn* Pawn);
 

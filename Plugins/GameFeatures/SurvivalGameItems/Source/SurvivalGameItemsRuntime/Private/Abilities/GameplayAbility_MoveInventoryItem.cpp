@@ -4,8 +4,7 @@
 #include "Abilities/GameplayAbility_MoveInventoryItem.h"
 
 #include "InventorySystem/InventoryManagerComponent.h"
-#include "Pickups/IPickupable.h"
-#include "Pickups/ItemPickupContainer.h"
+#include "SurvivalGame/Interactions/InteractionStatics.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(GameplayAbility_MoveInventoryItem)
 
@@ -19,71 +18,62 @@ void UGameplayAbility_MoveInventoryItem::ActivateAbility(const FGameplayAbilityS
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (HasAuthority(&CurrentActivationInfo))
+	if (HasAuthority(&CurrentActivationInfo) && TriggerEventData)
 	{
-		MoveInventoryItem(TriggerEventData->Instigator, TriggerEventData->OptionalObject);
+		MoveInventoryItem(*TriggerEventData);
 	}
 }
 
-void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const AActor* PlayerActor, const UObject* MoveItemObject)
+void UGameplayAbility_MoveInventoryItem::MoveInventoryItem(const FGameplayEventData& TriggerEventData)
 {
-	if (MoveItemObject == nullptr || PlayerActor == nullptr)
+	if (TriggerEventData.OptionalObject == nullptr || !IsValid(TriggerEventData.Instigator) || !IsValid(TriggerEventData.Target))
 	{
 		EndAbility(GetCurrentAbilitySpecHandle(), CurrentActorInfo, CurrentActivationInfo, true, false);
 		return;
 	}
 
-	if (const UMoveInventoryItemPayload* Data = Cast<UMoveInventoryItemPayload>(MoveItemObject))
+	const AActor* PlayerActor = TriggerEventData.Instigator;
+	const AActor* TargetActor = UInteractionStatics::GetCurrentInteractingActor(
+		Cast<APawn>(GetAvatarActorFromActorInfo()));
+	
+	if (const UMoveInventoryItemPayload* Data = Cast<UMoveInventoryItemPayload>(TriggerEventData.OptionalObject))
 	{
- 		// If not Player, and Source and Target guids are valid, then were are moving items on a none player inventory
-		if (!Data->bPlayerInventory && Data->SourceActorNetGUID.IsValid() && Data->TargetActorNetGUID.IsValid())
+ 		// If not Player, and Target is valid, then were are moving items on a none player inventory
+		if (Data->MoveAction == EMoveItemActionType::Move_TargetOnly && IsValid(TargetActor))
 		{
-			if (const AActor* SourceActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->SourceActorNetGUID))
+			if (UInventoryManagerComponent* TargetInventory = TargetActor->FindComponentByClass<UInventoryManagerComponent>())
 			{
-				const AActor* TargetActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->TargetActorNetGUID);
-				if (SourceActor == TargetActor)
-				{
-					if (UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>())
-					{
-						SourceInventory->MoveInventoryItem(Data->SourceSlot, Data->TargetSlot);
-					}
-				}
+				TargetInventory->Server_MoveInventorItem(Data->SourceSlot, Data->TargetSlot);
 			}
 		}
 		
-		// If Player and Source guid is valid, then we're moving an item from external inventory to player's inventory
-		else if (Data->bPlayerInventory && Data->SourceActorNetGUID.IsValid())
+		// Move an item from external inventory to player inventory
+		else if (Data->MoveAction == EMoveItemActionType::Move_TargetToPlayer && IsValid(TargetActor))
 		{
-			if (const AActor* SourceActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->SourceActorNetGUID))
-			{
-				UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
-				UInventoryManagerComponent* SourceInventory = SourceActor->FindComponentByClass<UInventoryManagerComponent>();
-				check(PlayerInventory && SourceInventory);
-
-				PlayerInventory->Server_AddInventoryItemFromOtherSourceWithTargetSlot(Data->TargetSlot, Data->SourceSlot, SourceInventory);
-			}
+			UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
+			UInventoryManagerComponent* SourceInventory = TargetActor->FindComponentByClass<UInventoryManagerComponent>();
+			check(PlayerInventory && SourceInventory);
+			
+			PlayerInventory->Server_AddInventoryItemFromOtherSourceWithTargetSlot(Data->TargetSlot, Data->SourceSlot, SourceInventory);
+		}
+		
+		// Moving an item from player's inventory to external inventory
+		else if (Data->MoveAction == EMoveItemActionType::Move_PlayerToTarget && IsValid(TargetActor))
+		{
+			UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
+			UInventoryManagerComponent* TargetInventory = TargetActor->FindComponentByClass<UInventoryManagerComponent>();
+			check(PlayerInventory && TargetInventory);
+		
+			TargetInventory->Server_AddInventoryItemFromOtherSourceWithTargetSlot(Data->TargetSlot, Data->SourceSlot, PlayerInventory);
 		}
 
-		// if Player and Target guid is valid, then we're moving an item from player's inventory to external inventory
-		else if (Data->bPlayerInventory && Data->TargetActorNetGUID.IsValid())
+		// Player is moving an item within its own inventory
+		else if (Data->MoveAction == EMoveItemActionType::Move_PlayerOnly)
 		{
-			if (const AActor* TargetActor = UPickupableStatics::FindActorByNetGUID<AItemPickupContainer>(GetWorld(), Data->TargetActorNetGUID))
-			{
-				UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
-				UInventoryManagerComponent* TargetInventory = TargetActor->FindComponentByClass<UInventoryManagerComponent>();
-				check(PlayerInventory && TargetInventory);
-
-				TargetInventory->Server_AddInventoryItemFromOtherSourceWithTargetSlot(Data->TargetSlot, Data->SourceSlot, PlayerInventory);
-			}
-		}
-
-		// if above condition fails, and it's Player's inventory
-		else if (Data->bPlayerInventory)
-		{
-			if (UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>())
-			{
-				PlayerInventory->MoveInventoryItem(Data->SourceSlot, Data->TargetSlot);
-			}
+			UInventoryManagerComponent* PlayerInventory = PlayerActor->FindComponentByClass<UInventoryManagerComponent>();
+			check(PlayerInventory);
+			
+			PlayerInventory->Server_MoveInventorItem(Data->SourceSlot, Data->TargetSlot);
 		}
 	}
 	

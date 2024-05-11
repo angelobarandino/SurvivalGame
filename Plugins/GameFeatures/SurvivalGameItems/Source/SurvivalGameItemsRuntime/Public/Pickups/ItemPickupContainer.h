@@ -28,7 +28,6 @@ public:
 	virtual TArray<FPickupItemEntry> GetPickupItems() override;
 	virtual bool TryDestroyPickupable() override;
 	virtual bool OnPickupAddedToInventory(const FPickupItemHandle& PickupItemHandle, const APlayerController* PickupInstigator) override;
-	virtual FGuid GetActorNetGUID() const override { return NetGUID; }
 	virtual UInventoryManagerComponent* GetInventoryManagerComponent() override { return InventoryManager; }
 	// ~End IPickupable
 
@@ -44,8 +43,4 @@ public:
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UInventoryManagerComponent> InventoryManager;
-
-	UPROPERTY(Transient, Replicated)
-	FGuid NetGUID;
-	
 };

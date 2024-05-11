@@ -3,6 +3,7 @@
 
 #include "Abilities/GameplayAbility_TransferInventoryItem.h"
 
+#include "AbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_WaitInputRelease.h"
 #include "Components/PawnItemManagerComponent.h"
 #include "InventorySystem/InventoryManagerComponent.h"
@@ -43,13 +44,13 @@ void UGameplayAbility_TransferInventoryItem::OnReleaseInput(float TimeHeld)
 					// if we are hovering on an item in players inventory, then we add to target pickupable actor
 					if (FocusedItem.bIsPlayer)
 					{
-						TargetInventory->AddInventoryItemFromOtherSource(FocusedItem.ItemSlot, PlayerInventory);
+						TargetInventory->Server_AddInventoryItemFromOtherSource(FocusedItem.ItemSlot, PlayerInventory);
 					}
 					
-					// if we are hovering on an item in a pickupable actor, then we add it to players inventory
+					// if we are hovering on an item from a item pickup actor, then we add it to players inventory
 					else
 					{
-						PlayerInventory->AddInventoryItemFromOtherSource(FocusedItem.ItemSlot, TargetInventory);
+						PlayerInventory->Server_AddInventoryItemFromOtherSource(FocusedItem.ItemSlot, TargetInventory);
 						
 						if (IPickupable* PickupableTargetActor = Cast<IPickupable>(TargetActor))
 						{

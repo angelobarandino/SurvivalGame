@@ -49,7 +49,7 @@ void UPickupableStatics::AddItemFromPlayerInventory(APlayerController* PlayerCon
 	{
 		if (UInventoryManagerComponent* PickupableInventory = Pickup->GetInventoryManagerComponent())
 		{
-			PickupableInventory->AddInventoryItemFromOtherSource(SourceSlotIndex, PlayerInventory);
+			PickupableInventory->Server_AddInventoryItemFromOtherSource(SourceSlotIndex, PlayerInventory);
 		}
 	}
 }
@@ -77,30 +77,5 @@ bool UPickupableStatics::AddAllItemPickupToInventory(APlayerController* PlayerCo
 	}
 
 	return false;
-}
-
-void UPickupableStatics::TakeItem(APlayerController* PlayerController, TScriptInterface<IPickupable> Pickup, const int32 SlotIndex)
-{
-	if (PlayerController == nullptr || Pickup.GetObject() == nullptr || SlotIndex < 0)
-	{
-		return;
-	}
-
-	if (UInventoryManagerComponent* InventoryManager = PlayerController->FindComponentByClass<UInventoryManagerComponent>())
-	{
-		const TArray<FPickupItemEntry> PickupItems = Pickup->GetPickupItems();
-
-		FPickupItemHandle PickupItemHandle;
-		for (const FPickupItemEntry& PickupItem : PickupItems)
-		{
-			if (PickupItem.ItemSlot == SlotIndex)
-			{
-				PickupItemHandle.AddResult(PickupItem.InstanceId, InventoryManager->AddInventorItem(PickupItem.ItemDef, PickupItem.ItemStack));
-				break;
-			}
-		}
-
-		Pickup->OnPickupAddedToInventory(PickupItemHandle, PlayerController);
-	}
 }
 

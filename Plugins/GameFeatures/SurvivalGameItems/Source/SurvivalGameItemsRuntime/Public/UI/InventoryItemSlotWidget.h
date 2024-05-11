@@ -27,6 +27,15 @@ struct FMoveItem
 
 };
 
+UENUM()
+enum class EMoveItemActionType
+{
+	Move_PlayerOnly,
+	Move_TargetOnly,
+	Move_PlayerToTarget,
+	Move_TargetToPlayer
+};
+
 UCLASS(Blueprintable)
 class UMoveInventoryItemPayload : public UObject
 {
@@ -38,12 +47,10 @@ public:
 	{
 		return true;
 	}
-
-	FGuid SourceActorNetGUID;
-	FGuid TargetActorNetGUID;
+	
+	EMoveItemActionType MoveAction;
 	int32 SourceSlot;
 	int32 TargetSlot;
-	bool bPlayerInventory;
 };
 
 UCLASS()
@@ -88,9 +95,6 @@ protected:
 		return OwningActor == GetOwningPlayer();
 	}
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item")
-	TSubclassOf<UInventoryItemDragPreview> DragPreviewWidgetClass;
-	
 	void SetInventoryItemTooltip();
 	void OnTooltipWidgetLoaded();
 
@@ -105,6 +109,15 @@ protected:
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	// ~End UUserWidget
 
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item|Sounds")
+	TObjectPtr<USoundBase> ItemDragSound;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item|Sounds")
+	TObjectPtr<USoundBase> ItemDropSound;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item")
+	TSubclassOf<UInventoryItemDragPreview> DragPreviewWidgetClass;
+	
 private:
 	friend UInventoryGrid;
 	

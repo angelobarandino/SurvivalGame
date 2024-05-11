@@ -26,6 +26,8 @@ public:
 	FGameplayTag InteractActiveGrantedTag;
 
 protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
+	TObjectPtr<USoundBase> InteractSound;
 
 	UFUNCTION(BlueprintCallable)
 	AActor* GetActorFromInteractableTarget() const;
