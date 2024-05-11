@@ -48,7 +48,6 @@ struct FInventoryItemList : public FFastArraySerializer
 	}
 	//~End of FFastArraySerializer contract
 
-
 public:
 	void MarkItemDirtyAndBroadcastChange(FInventoryItemEntry& Entry);
 	

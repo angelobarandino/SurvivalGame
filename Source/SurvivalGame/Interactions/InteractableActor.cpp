@@ -6,38 +6,20 @@
 #include "InteractionStatics.h"
 
 
-AInteractableActor::AInteractableActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+AInteractableActor::AInteractableActor(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer),
+	ActiveInteractingActorCount(0)
 {
 	PrimaryActorTick.bCanEverTick = false;
 }
 
 void AInteractableActor::HighlightActor()
 {
-	ActiveInteractingActorCount++;
-
 	UInteractionStatics::SetActorHighlightEnable(this, true);
-
-	OnInteractionActive();
 }
 
 void AInteractableActor::UnHighlightActor()
 {
-	ActiveInteractingActorCount--;
-
-	if (ActiveInteractingActorCount <= 0)
-	{
-		ActiveInteractingActorCount = 0;
-		UInteractionStatics::SetActorHighlightEnable(this, false);
-		OnInteractionInactive();
-	}
-}
-
-void AInteractableActor::GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions)
-{
-	for (const FInteractOption& InteractOption : InteractOptions)
-	{
-		FInteractOption& OptionEntry = InteractionOptions.Add_GetRef(InteractOption);
-	}
+	UInteractionStatics::SetActorHighlightEnable(this, false);
 }
 
 void AInteractableActor::GetInteractionDefinition(FInteractionDefinition& InteractionDefinition)

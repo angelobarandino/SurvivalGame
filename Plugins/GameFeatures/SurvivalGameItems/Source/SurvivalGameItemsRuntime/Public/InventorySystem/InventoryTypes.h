@@ -27,10 +27,10 @@ struct FInventoryChangeMessage
 	GENERATED_BODY()
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
-	EInventoryChangeAction ChangeAction;
+	EInventoryChangeAction ChangeAction = EInventoryChangeAction::ItemAdded;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
-	TSubclassOf<UItemDefinition> ItemDef;
+	TSubclassOf<UItemDefinition> ItemDef = nullptr;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
 	TWeakObjectPtr<const UInventoryItemInstance> ItemInstance = nullptr;
@@ -42,7 +42,26 @@ struct FInventoryChangeMessage
 	int32 OldItemSlot = 0;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
-	TWeakObjectPtr<const AActor> OwnerActor;
+	TWeakObjectPtr<const AActor> OwnerActor = nullptr;
+};
+
+
+UCLASS(BlueprintType)
+class UInventoryChangeNotification : public UObject
+{
+	GENERATED_BODY()
+
+	UInventoryChangeNotification() {}
+
+public:
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	EInventoryChangeAction NoticationType = EInventoryChangeAction::ItemAdded;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	TSubclassOf<UItemDefinition> ItemDef = nullptr;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	int32 ItemCount = 0;
 };
 
 

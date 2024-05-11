@@ -21,14 +21,6 @@ void UInteractableComponent::UnHighlightActor()
 	UInteractionStatics::SetActorHighlightEnable(GetOwner(), false);
 }
 
-void UInteractableComponent::GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions)
-{
-	for (const FInteractOption& InteractOption : InteractOptions)
-    {
-    	FInteractOption& OptionEntry = InteractionOptions.Add_GetRef(InteractOption);
-    }
-}
-
 void UInteractableComponent::GetInteractionDefinition(FInteractionDefinition& InteractionDefinition)
 {
 	InteractionDefinition.Name = InteractableObjectName;

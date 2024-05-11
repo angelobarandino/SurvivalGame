@@ -9,7 +9,10 @@
 #include "UI/InventoryItemSlotWidget.h"
 #include "InventoryManagerComponent.generated.h"
 
+
 class UItemDefinition;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FInventoryChangeNotificationDelegate, const UInventoryChangeNotification*, Notification);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class SURVIVALGAMEITEMSRUNTIME_API UInventoryManagerComponent : public UActorComponent
@@ -32,18 +35,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	FAddInventoryItemResult AddInventorItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
 
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	bool MoveInventoryItem(const int32 CurrentSlot, const int32 NewSlot);
-
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	bool RemoveInventoryItem(const UInventoryItemInstance* ItemInstance);
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	UInventoryItemInstance* FindItemInstanceInSlot(const int32 Slot);
-
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	int32 FindAvailableSlot();
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	void SetFocusedInventoryItemSlot(const int32 FocusedSlot)
 	{
@@ -66,12 +63,19 @@ public:
 	bool Server_MoveInventorItem(const int32 CurrentSlot, const int32 NewSlot);
 
 public:
+	UFUNCTION(NetMulticast, Reliable)
+	void BroadcastInventoryChange(const EInventoryChangeAction NotificationType, TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
+
 	UInventoryItemInstance* AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount);
 	
 	void GetItemDefInventoryStack(TSubclassOf<UItemDefinition> ItemDef, bool& bCanStack, int32& MaxStack) const;
 
 	UPROPERTY(Replicated)
 	int32 MaxInventorySize;
+
+	UPROPERTY(BlueprintAssignable)
+	FInventoryChangeNotificationDelegate OnInventoryChangeNotify;
+	
 private:
 
 	UPROPERTY(Replicated)

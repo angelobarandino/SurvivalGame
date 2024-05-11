@@ -42,6 +42,8 @@ private:
 	FTimerHandle TimerHandle;
 	TScriptInterface<IInteractableTarget> ActiveInteractableTarget;
 	
+	void ToggleInteractableHighlight(const TScriptInterface<IInteractableTarget>& InteractableObject, const bool bIsHighligh) const;
+	
 	void PerformTrace();
 	void FoundInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableObject);
 	void LostInteractableTarget();

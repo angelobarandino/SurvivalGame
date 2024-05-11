@@ -14,19 +14,6 @@ class UInventoryItemTooltip;
 class UInventoryManagerComponent;
 class UInventoryItemDragPreview;
 
-USTRUCT(Blueprintable)
-struct FMoveItem
-{
-	GENERATED_BODY()
-
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UInventoryManagerComponent> TargetInventoryManager;
-	
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UInventoryManagerComponent> SourceInventoryManager;
-
-};
-
 UENUM()
 enum class EMoveItemActionType
 {
@@ -109,12 +96,6 @@ protected:
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation) override;
 	// ~End UUserWidget
 
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item|Sounds")
-	TObjectPtr<USoundBase> ItemDragSound;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item|Sounds")
-	TObjectPtr<USoundBase> ItemDropSound;
-	
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Item")
 	TSubclassOf<UInventoryItemDragPreview> DragPreviewWidgetClass;
 	

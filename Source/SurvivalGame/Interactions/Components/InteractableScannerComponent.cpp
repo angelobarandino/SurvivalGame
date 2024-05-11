@@ -74,6 +74,20 @@ void UInteractableScannerComponent::PerformTrace()
 #endif
 }
 
+void UInteractableScannerComponent::ToggleInteractableHighlight(const TScriptInterface<IInteractableTarget>& InteractableObject, const bool bIsHighligh) const
+{
+	if (const APawn* Owner = Cast<APawn>(GetOwner()))
+	{
+		if (Owner->IsLocallyControlled())
+		{
+			if (const AActor* InteractableActor = UInteractionStatics::GetActorFromInteractableTarget(InteractableObject))
+			{
+				UInteractionStatics::SetActorHighlightEnable(InteractableActor, bIsHighligh);
+			}
+		}
+	}
+}
+
 void UInteractableScannerComponent::FoundInteractableTarget(const TScriptInterface<IInteractableTarget>& InteractableObject)
 {
 	if (IsValid(ActiveInteractableTarget.GetObject()))
@@ -84,11 +98,12 @@ void UInteractableScannerComponent::FoundInteractableTarget(const TScriptInterfa
 		}
 
 		LostInteractable.Broadcast(TScriptInterface<IInteractableTarget>());
-		ActiveInteractableTarget->UnHighlightActor();
+		ToggleInteractableHighlight(ActiveInteractableTarget, false);
 	}
 
 	ActiveInteractableTarget = InteractableObject;
-	ActiveInteractableTarget->HighlightActor();
+
+	ToggleInteractableHighlight(InteractableObject, true);
 	
 	FoundInteractable.Broadcast(ActiveInteractableTarget);
 }
@@ -102,7 +117,7 @@ void UInteractableScannerComponent::LostInteractableTarget()
 	
 	if (IsValid(ActiveInteractableTarget.GetObject()))
 	{
-		ActiveInteractableTarget->UnHighlightActor();
+		ToggleInteractableHighlight(ActiveInteractableTarget, false);
 	}
 	
 	LostInteractable.Broadcast(TScriptInterface<IInteractableTarget>());

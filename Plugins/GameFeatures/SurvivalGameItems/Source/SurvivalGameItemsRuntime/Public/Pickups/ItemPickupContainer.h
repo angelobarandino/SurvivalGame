@@ -19,11 +19,13 @@ public:
 	AItemPickupContainer(const FObjectInitializer& ObjectInitializer);
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 	
 protected:
 	virtual void BeginPlay() override;
 
 public:
+	
 	// ~Start IPickupable
 	virtual TArray<FPickupItemEntry> GetPickupItems() override;
 	virtual bool TryDestroyPickupable() override;

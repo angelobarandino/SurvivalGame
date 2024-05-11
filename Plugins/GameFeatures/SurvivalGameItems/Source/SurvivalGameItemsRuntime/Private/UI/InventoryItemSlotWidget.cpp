@@ -176,11 +176,9 @@ FReply UInventoryItemSlotWidget::NativeOnPreviewMouseButtonDown(const FGeometry&
 void UInventoryItemSlotWidget::NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)
 {
 	Super::NativeOnDragDetected(InGeometry, InMouseEvent, OutOperation);
-
+	
 	if (IsValid(ItemInstance) && OwningInventoryManager.IsValid() && bEnableDragAndDrop)
 	{
-		UGameplayStatics::PlaySound2D(GetOwningPlayer(), ItemDragSound);
-		
 		if (UUserWidget* PreviewWidget = CreateDragPreview())
 		{
 			if (UInventoryItemDragDropOperation* DragDropOperation = Cast<UInventoryItemDragDropOperation>(
@@ -202,7 +200,6 @@ bool UInventoryItemSlotWidget::NativeOnDrop(const FGeometry& InGeometry, const F
 	
 	if (const UInventoryItemDragDropOperation* Operation = Cast<UInventoryItemDragDropOperation>(InOperation))
 	{
-		UGameplayStatics::PlaySound2D(GetOwningPlayer(), ItemDropSound);
 		
 		UPawnItemManagerStatics::SetFocusedInventoryItem(GetOwningPlayerPawn(), SlotIndex,  IsPlayerOwner());
 		

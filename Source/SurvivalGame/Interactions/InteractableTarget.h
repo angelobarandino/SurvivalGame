@@ -25,7 +25,6 @@ public:
 	
 	virtual void UnHighlightActor() = 0;
 	virtual void HighlightActor() = 0;
-	virtual void GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions) = 0;
 	virtual void GetInteractionDefinition(FInteractionDefinition& InteractionDefinition) = 0;
 
 	UFUNCTION(BlueprintCallable)

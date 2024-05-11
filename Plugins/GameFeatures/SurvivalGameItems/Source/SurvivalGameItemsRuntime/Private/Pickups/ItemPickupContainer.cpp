@@ -23,9 +23,9 @@ void AItemPickupContainer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 }
 
-void AItemPickupContainer::BeginPlay()
+void AItemPickupContainer::PostInitializeComponents()
 {
-	Super::BeginPlay();
+	Super::PostInitializeComponents();
 
 	if (HasAuthority())
 	{
@@ -36,6 +36,11 @@ void AItemPickupContainer::BeginPlay()
 			InventoryManager->AddInitialInventoryItem(PickupItem.ItemDef, PickupItem.ItemStack);
 		}
 	}
+}
+
+void AItemPickupContainer::BeginPlay()
+{
+	Super::BeginPlay();
 }
 
 TArray<FPickupItemEntry> AItemPickupContainer::GetPickupItems()

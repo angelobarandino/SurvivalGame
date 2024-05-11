@@ -156,9 +156,7 @@ FAddInventoryItemRequest FInventoryItemList::MakeAddOrNewItemRequest(const TSubc
 		return Result;
 	}
 
-	int32 MaxStack = 1;
-	bool bCanStack = false;
-	OwnerInventory->GetItemDefInventoryStack(ItemDef, bCanStack, MaxStack);
+	OwnerInventory->GetItemDefInventoryStack(ItemDef, Result.bSlotCanStack, Result.SlotMaxStack);
 	
 	for (int InventorySlot = 0; InventorySlot < MaxInventoryItems; ++InventorySlot)
 	{
@@ -172,7 +170,7 @@ FAddInventoryItemRequest FInventoryItemList::MakeAddOrNewItemRequest(const TSubc
 				// return it as the result, but only if we can add more to its stack.
 				if (ItemInstance->ItemDef == ItemDef)
 				{
-					if (!bCanStack || MaxStack == Entry->ItemCount)
+					if (!Result.bSlotCanStack || Result.SlotMaxStack == Entry->ItemCount)
 					{
 						continue;
 					}
@@ -194,8 +192,6 @@ FAddInventoryItemRequest FInventoryItemList::MakeAddOrNewItemRequest(const TSubc
 		break;
 	}
 
-	Result.SlotMaxStack = MaxStack;
-	Result.bSlotCanStack = bCanStack;
 	return Result;
 }
 
@@ -218,8 +214,6 @@ FAddItemResult FInventoryItemList::CreateNewItem(const FAddInventoryItemRequest&
 	check(OwnerInventory);
 	check(ItemRequest.ItemDef);
 
-	FAddItemResult Result;
-
 	AActor* OwningActor = OwnerInventory->GetOwner();
 	if (OwningActor->HasAuthority())
 	{
@@ -236,12 +230,14 @@ FAddItemResult FInventoryItemList::CreateNewItem(const FAddInventoryItemRequest&
 		
 		MarkItemDirtyAndBroadcastChange(NewItem);
 		
+		FAddItemResult Result;
 		Result.bSuccess = true;
 		Result.Instance = ItemInstance;
 		Result.ItemsAdded = ItemsToAdd;
+		return Result;
 	}
 
-	return Result;
+	return FAddItemResult();
 }
 
 FAddItemResult FInventoryItemList::AddItemToSlot(const FAddInventoryItemRequest& ItemRequest, const int32 ItemCount)

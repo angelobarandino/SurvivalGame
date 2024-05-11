@@ -19,7 +19,6 @@ public:
 	// ~Begin IInteractableTarget
 	virtual void HighlightActor() override;
 	virtual void UnHighlightActor() override;
-	virtual void GatherInteractionOptions(TArray<FInteractOption>& InteractionOptions) override;
 	virtual void GetInteractionDefinition(FInteractionDefinition& InteractionDefinition) override;
 	virtual const FText GetInteractableName() const override;
 	// ~End IInteractableTarget

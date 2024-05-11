@@ -109,13 +109,9 @@ FAddInventoryItemResult UInventoryManagerComponent::AddInventorItem(const TSubcl
 		}
 	}
 
-	return FAddInventoryItemResult::GenerateResult(ItemCount, RemainingItemCount);
-}
+	BroadcastInventoryChange(EInventoryChangeAction::ItemAdded, ItemDef, ItemCount - RemainingItemCount);
 
-bool UInventoryManagerComponent::MoveInventoryItem(const int32 CurrentSlot, const int32 NewSlot)
-{
-	Server_MoveInventorItem(CurrentSlot, NewSlot);
-	return true;
+	return FAddInventoryItemResult::GenerateResult(ItemCount, RemainingItemCount);
 }
 
 bool UInventoryManagerComponent::RemoveInventoryItem(const UInventoryItemInstance* ItemInstance)
@@ -133,21 +129,6 @@ UInventoryItemInstance* UInventoryManagerComponent::FindItemInstanceInSlot(const
 	return nullptr;
 }
 
-int32 UInventoryManagerComponent::FindAvailableSlot()
-{
-	for (int SlotIndex = 0; SlotIndex < MaxInventorySize; ++SlotIndex)
-	{
-		if (InventoryList.GetInventoryItemAtSlot(SlotIndex))
-		{
-			continue;
-		}
-
-		return SlotIndex;
-	}
-
-	return -1;
-}
-
 bool UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource(const int32 SourceSlot, UInventoryManagerComponent* SourceInventory)
 {
 	if (SourceInventory)
@@ -155,8 +136,8 @@ bool UInventoryManagerComponent::Server_AddInventoryItemFromOtherSource(const in
 		if (const UInventoryItemInstance* SourceItemInstance = SourceInventory->FindItemInstanceInSlot(SourceSlot))
 		{
 			const int32 SourceItemCount = SourceItemInstance->GetItemCount();
-			const FAddInventoryItemResult& AddItemResult = AddInventorItem(
-				SourceItemInstance->GetItemDef(), SourceItemCount);
+			const TSubclassOf<UItemDefinition> ItemDef = SourceItemInstance->GetItemDef();
+			const FAddInventoryItemResult& AddItemResult = AddInventorItem(ItemDef, SourceItemCount);
 			
 			if (AddItemResult.Result != EAddItemResult::Failed)
 			{
@@ -200,6 +181,8 @@ bool UInventoryManagerComponent::Server_AddInventoryItemFromOtherSourceWithTarge
 
 			if (Result.bSuccess)
 			{
+				BroadcastInventoryChange(EInventoryChangeAction::ItemAdded, Request.ItemDef, Result.ItemsAdded);
+				
 				SourceInventory->InventoryList.RemoveItemStack(SourceItemInstance, Result.ItemsAdded);
 				return true;
 			}
@@ -242,9 +225,18 @@ bool UInventoryManagerComponent::Server_MoveInventorItem(const int32 CurrentSlot
 	return false;
 }
 
+void UInventoryManagerComponent::BroadcastInventoryChange_Implementation(const EInventoryChangeAction NotificationType, TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
+{
+	UInventoryChangeNotification* Notification = NewObject<UInventoryChangeNotification>();
+	Notification->NoticationType = NotificationType;
+	Notification->ItemDef = ItemDef;
+	Notification->ItemCount = ItemCount;
+	OnInventoryChangeNotify.Broadcast(Notification);
+}
+
 UInventoryItemInstance* UInventoryManagerComponent::AddInitialInventoryItem(const TSubclassOf<UItemDefinition> ItemDef, const int32 ItemCount)
 {
-	FAddItemResult Result = InventoryList.CreateNewItem(InventoryList.MakeAddOrNewItemRequest(ItemDef), ItemCount);
+	const FAddItemResult Result = InventoryList.CreateNewItem(InventoryList.MakeAddOrNewItemRequest(ItemDef), ItemCount);
 	if (Result.bSuccess)
 	{
 		UInventoryItemInstance* ItemInstance = Result.Instance.Get();
