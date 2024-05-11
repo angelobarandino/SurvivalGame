@@ -109,9 +109,8 @@ void UInventoryGrid::CreateInventorySlot(const TSubclassOf<UInventoryItemSlotWid
 		
 		if (OwningInventoryManager)
 		{
-			//if (UInventoryItemSlotWidget* SlotWidget = Cast<UInventoryItemSlotWidget>(UWidgetBlueprintLibrary::Create(this, SlotClass, GetOwningPlayer())))
-
-			if (UInventoryItemSlotWidget* SlotWidget = WidgetPool.GetOrCreateInstance<UInventoryItemSlotWidget>(SlotClass))
+			//if (UInventoryItemSlotWidget* SlotWidget = WidgetPool.GetOrCreateInstance<UInventoryItemSlotWidget>(SlotClass))
+			if (UInventoryItemSlotWidget* SlotWidget = Cast<UInventoryItemSlotWidget>(UWidgetBlueprintLibrary::Create(this, SlotClass, GetOwningPlayer())))
 			{
 				SlotWidget->SlotIndex = SlotIndex;
 				SlotWidget->bEnableDragAndDrop = bEnableDragAndDrop;
@@ -122,7 +121,7 @@ void UInventoryGrid::CreateInventorySlot(const TSubclassOf<UInventoryItemSlotWid
 				SlotWidget->OwningActor = OwningActor.Get();
 				SlotWidget->OwningInventoryManager = OwningInventoryManager;
 				SlotWidget->SetInventorySlotItemInstance(OwningInventoryManager->FindItemInstanceInSlot(SlotIndex));
-				InventorySlots.Add(SlotWidget);
+				//InventorySlots.Add(SlotWidget);
 				
 				if (UUniformGridSlot* GridSlot = InventoryGrid->AddChildToUniformGrid(SlotWidget, Row, Column))
 				{
