@@ -51,8 +51,6 @@ class UInventoryChangeNotification : public UObject
 {
 	GENERATED_BODY()
 
-	UInventoryChangeNotification() {}
-
 public:
 	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
 	EInventoryChangeAction NoticationType = EInventoryChangeAction::ItemAdded;

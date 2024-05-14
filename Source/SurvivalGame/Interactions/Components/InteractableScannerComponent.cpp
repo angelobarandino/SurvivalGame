@@ -13,7 +13,7 @@ UInteractableScannerComponent::UInteractableScannerComponent(const FObjectInitia
 {
 	PrimaryComponentTick.bCanEverTick = false;
 	
-	SetIsReplicatedByDefault(true);
+	// SetIsReplicatedByDefault(false);
 }
 
 TScriptInterface<IInteractableTarget> UInteractableScannerComponent::GetActiveInteractableTarget() const

@@ -16,7 +16,7 @@ class UAbilityTask_WaitForInteractableTarget : public UAbilityTask
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintCallable, Category = "Ability|Tasl", meta=(HidePin="OwningAbility", DefaultToSelf="OwningAbility", BlueprintInternalUseOnly=true))
+	UFUNCTION(BlueprintCallable, Category = "Ability|Task", meta=(HidePin="OwningAbility", DefaultToSelf="OwningAbility", BlueprintInternalUseOnly=true))
 	static UAbilityTask_WaitForInteractableTarget* WaitForInteractableTarget(UGameplayAbility* OwningAbility, float InteractionScanRange = 100.f, float InteractionScanRate = 0.1f, bool bShowDebug = false);
 
 	virtual void Activate() override;

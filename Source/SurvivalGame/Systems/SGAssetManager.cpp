@@ -22,5 +22,6 @@ void USGAssetManager::StartInitialLoading()
 {
 	Super::StartInitialLoading();
 
+	// Required to use target data
 	UAbilitySystemGlobals::Get().InitGlobalData();
 }
